@@ -3,6 +3,9 @@
 import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Button } from "@/components/ui/button" // Import your Button component
+import { Input } from "@/components/ui/input" // Import your Input component
+import { Textarea } from "@/components/ui/textarea" // Import your Textarea component
 
 interface ScholarshipApplication {
   id: string
@@ -17,6 +20,8 @@ interface ScholarshipApplication {
 
 export default function AdminPanel() {
   const [applications, setApplications] = useState<ScholarshipApplication[]>([])
+  const [command, setCommand] = useState('')
+  const [response, setResponse] = useState<string>('')
 
   useEffect(() => {
     async function fetchApplications() {
@@ -29,6 +34,28 @@ export default function AdminPanel() {
 
     fetchApplications()
   }, [])
+
+  const handleCommandSubmit = async () => {
+    try {
+      const res = await fetch('/api/chatgpt-command', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ command, applications }),
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        setResponse(data.message)
+      } else {
+        setResponse('Failed to fetch response from ChatGPT API')
+      }
+    } catch (error) {
+      console.error(error)
+      setResponse('An error occurred while processing the command')
+    }
+  }
 
   return (
     <div>
@@ -55,7 +82,25 @@ export default function AdminPanel() {
           ))}
         </div>
       </ScrollArea>
+
+      <div className="mt-6">
+        <h3 className="text-xl font-semibold mb-2">Ask ChatGPT</h3>
+        <div className="flex flex-col gap-2">
+          <Input
+            value={command}
+            onChange={(e) => setCommand(e.target.value)}
+            placeholder="Type your command here..."
+          />
+          <Button onClick={handleCommandSubmit}>Submit Command</Button>
+        </div>
+      </div>
+
+      {response && (
+        <div className="mt-6">
+          <h3 className="text-xl font-semibold mb-2">Response</h3>
+          <Textarea readOnly value={response} className="w-full h-40" />
+        </div>
+      )}
     </div>
   )
 }
-
