@@ -78,6 +78,11 @@ export default function AdminPanel() {
                   <summary className="cursor-pointer text-blue-600 hover:underline">View Motivation</summary>
                   <p className="mt-2">{application.motivation}</p>
                 </details>
+
+                <details>
+                  <summary className="cursor-pointer text-blue-600 hover:underline">View Document</summary>
+                  <Textarea readOnly value={application.document} className="w-full h-40" />
+                </details>
               </CardContent>
             </Card>
           ))}
