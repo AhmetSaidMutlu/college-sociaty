@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
@@ -18,6 +19,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "@/hooks/use-toast"
+import FileUpload from "./file-upload"
 
 const formSchema = z.object({
   fullName: z.string().min(2, {
@@ -38,10 +40,17 @@ const formSchema = z.object({
   motivation: z.string().min(50, {
     message: "Motivation statement must be at least 50 characters.",
   }),
+  document: z.string().min(5, {
+    message: "Please upload a PDF document.",
+  }),
 })
 
 export function ScholarshipApplication() {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [fileText, setFileText] = useState<string | null>(null)
+
+
+
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -52,8 +61,17 @@ export function ScholarshipApplication() {
       studyField: "",
       academicYear: "",
       motivation: "",
+      document: "",
     },
   })
+
+  useEffect(() => {
+    if (fileText) {
+      console.log('PDF File Text:', fileText)
+      form.setValue("document", JSON.stringify(fileText));
+    }
+
+  }, [fileText, form])
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true)
@@ -189,6 +207,27 @@ export function ScholarshipApplication() {
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="document"
+                render={({ field }) => (
+                  <FileUpload
+                    setFileText={setFileText}
+                    form={form}
+                    {...field}
+                  >
+                    <FormMessage />
+                  </FileUpload>
+                )}
+              />
+
+              {/* <div className='w-96'>
+                <FileUpload
+                  setFileText={setFileText}
+                  form={form}
+                />
+              </div> */}
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? "Submitting..." : "Submit Application"}
               </Button>

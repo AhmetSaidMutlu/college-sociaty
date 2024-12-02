@@ -8,14 +8,15 @@ generator client {
 }
 
 model ScholarshipApplication {
-  id           String   @id @default(uuid())
+  id           String @id @default(uuid())
   fullName     String
   email        String
   institution  String
   studyField   String
   academicYear String
   motivation   String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-}
+  document     String
 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
