@@ -7,7 +7,7 @@ const openai = new OpenAI({
 
 export async function POST(request: Request) {
   try {
-    const { command, applications } = await request.json()
+    const { command, applications, document } = await request.json()
 
     const prompt = `
       You are an assistant helping to analyze scholarship applications. 
@@ -19,6 +19,9 @@ export async function POST(request: Request) {
 
       Command:
       "${command}"
+
+      Document:
+      "${document}"
 
       Provide your analysis based on the command.
     `

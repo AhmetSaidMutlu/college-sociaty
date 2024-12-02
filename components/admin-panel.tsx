@@ -16,6 +16,7 @@ interface ScholarshipApplication {
   academicYear: string
   motivation: string
   createdAt: string
+  document: string
 }
 
 export default function AdminPanel() {
@@ -42,7 +43,7 @@ export default function AdminPanel() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ command, applications }),
+        body: JSON.stringify({ command, applications, document }),
       })
 
       if (res.ok) {
