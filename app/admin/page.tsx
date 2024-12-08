@@ -1,9 +1,8 @@
 "use client";
 
-import { redirect } from 'next/navigation';
 import AdminPanel from '@/components/admin-panel';
 import { useUser } from '@clerk/nextjs';
-import { Container } from 'lucide-react';
+import { SignInButton, SignOutButton } from '@clerk/nextjs';
 
 export default function AdminPage() {
   const { user, isLoaded } = useUser();
@@ -17,9 +16,15 @@ export default function AdminPage() {
 
   if (!isAdmin) {
     return (
-      <Container>
-        Bu sayfayı görüntüleme yetkiniz yok.
-      </Container>
+      <div className="flex flex-col items-center justify-center h-screen">
+        <p className="mb-4">Bu sayfayı görüntüleme yetkiniz yok.</p>
+        <SignInButton>
+          <button className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-700 mb-2">Login</button>
+        </SignInButton>
+        <SignOutButton>
+          <button className="bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-700">Logout</button>
+        </SignOutButton>
+      </div>
     );
   }
 
