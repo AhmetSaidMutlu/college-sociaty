@@ -37,13 +37,14 @@ export default function AdminPanel() {
   }, [])
 
   const handleCommandSubmit = async () => {
+
     try {
       const res = await fetch('/api/chatgpt-command', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ command, applications, document }),
+        body: JSON.stringify({ command, applications, document: applications[0].document }),
       })
 
       if (res.ok) {
