@@ -1,6 +1,7 @@
 "use client"
 
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
 import { Button } from "@/components/ui/button"
 import {
   NavigationMenu,
@@ -13,6 +14,18 @@ import {
 import { cn } from "@/lib/utils"
 
 export default function Header() {
+  const [isScholarshipEnabled, setIsScholarshipEnabled] = useState(false)
+
+  useEffect(() => {
+    const fetchScholarshipStatus = async () => {
+      const response = await fetch('/api/scholarship-status')
+      const data = await response.json()
+      setIsScholarshipEnabled(data.isEnabled)
+    }
+
+    fetchScholarshipStatus()
+  }, [])
+
   return (
     <header className="bg-white shadow-sm">
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
@@ -79,7 +92,11 @@ export default function Header() {
             </NavigationMenuItem>
           </NavigationMenuList>
         </NavigationMenu>
-        <Button>Join Now</Button>
+        {isScholarshipEnabled && (
+          <Button asChild>
+            <Link href="/scholarship-application">Burs Başvurusu için tıklayınız</Link>
+          </Button>
+        )}
       </div>
     </header>
   )

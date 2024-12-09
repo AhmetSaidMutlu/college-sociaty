@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation'
 import { auth } from '@clerk/nextjs/server'
-import AdminPanel from '@/components/admin-panel'
+import dynamic from 'next/dynamic'
+
+const AdminPanel = dynamic(() => import('@/components/admin-panel'), { ssr: false })
 
 export default async function AdminPage() {
   const { userId } = await auth()
