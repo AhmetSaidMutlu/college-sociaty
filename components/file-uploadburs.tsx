@@ -11,7 +11,7 @@ export default function FileUpload({ form, setFileText }: any) {
     <FilePond
       server={{
         process: {
-          url: '/api/upload',
+          url: '/api/uploadburs',
           method: 'POST',
           // withCredentials: false,
           // headers: {},

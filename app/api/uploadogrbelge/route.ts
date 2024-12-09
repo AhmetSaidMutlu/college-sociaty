@@ -21,19 +21,16 @@ async function parsePdf(filePath: string): Promise<string> {
 
 function extractSpecificFields(rawText: string) {
   const result: Record<string, string | null> = {
-    "Adı Soyadı": null,
-    "T.C. Kimlik Numarası": null,
-    "Toplam Ödenen": null,
+
+    "sınıf": null,
   };
 
   // Regex to capture the full name (first and last name), stopping before "Ek"
-  const nameMatch = rawText.match(/Adı Soyadı\s*([A-Za-zÇŞĞÜÖİçşğüöı]+\s+[A-Za-zÇŞĞÜÖİçşğüöı]+)(?=\s*Ek|\n|$|[A-Z])/);
-  const tcMatch = rawText.match(/T\.C\. Kimlik Numarası\s*(\d+)/);
-  const totalPaidMatch = rawText.match(/Toplam Ödenen\s*(\d+\.\d+)/);
 
-  result["Adı Soyadı"] = nameMatch ? nameMatch[1].trim() : null;
-  result["T.C. Kimlik Numarası"] = tcMatch ? tcMatch[1].trim() : null;
-  result["Toplam Ödenen"] = totalPaidMatch ? totalPaidMatch[1].trim() : null;
+  const classMatch = rawText.match(/Sınıf\s*:\s*"(\d+\.\s*SINIF)"/);
+
+
+  result["Sınıf"] = classMatch ? classMatch[1].trim() : null;
 
   return result;
 }

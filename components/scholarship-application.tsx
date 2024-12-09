@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client"
 
 import { useEffect, useState } from "react"
@@ -18,8 +17,13 @@ import {
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "@/hooks/use-toast"
-import FileUpload from "./file-upload"
+import FileUploadNufuz from "./file-uploadnufuz"
+import FileUploadTotal from "./file-uploadtotal"
+import FileUploadNotort from "./file-uploadnotort"
+import FileUploadBurs from "./file-uploadburs"
+import FileUploadOgrbelge from "./file-uploadogrbelge"
 
 const formSchema = z.object({
   fullName: z.string().min(2, {
@@ -41,16 +45,29 @@ const formSchema = z.object({
     message: "Motivation statement must be at least 50 characters.",
   }),
   document: z.string().min(5, {
-    message: "Please upload a PDF document.",
+    message: "Please upload all required documents.",
   }),
+  residenceStatus: z.string({
+    required_error: "Please select your residence status.",
+  }),
+  monthlyFee: z.string().optional(),
+  iban: z.string().min(5, {
+    message: "Please enter a valid IBAN.",
+  }),
+  bankAccountName: z.string().min(2, {
+    message: "Please enter the name registered with the bank account.",
+  }),
+  isMartyVeteranRelative: z.boolean(),
+  hasDisability: z.boolean(),
 })
 
 export function ScholarshipApplication() {
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [fileText, setFileText] = useState<string | null>(null)
-
-
-
+  const [fileTextNufuz, setFileTextNufuz] = useState<string | null>(null)
+  const [fileTextTotal, setFileTextTotal] = useState<string | null>(null)
+  const [fileTextNotort, setFileTextNotort] = useState<string | null>(null)
+  const [fileTextBurs, setFileTextBurs] = useState<string | null>(null)
+  const [fileTextOgrbelge, setFileTextOgrbelge] = useState<string | null>(null)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -62,16 +79,27 @@ export function ScholarshipApplication() {
       academicYear: "",
       motivation: "",
       document: "",
+      residenceStatus: "",
+      monthlyFee: "",
+      iban: "",
+      bankAccountName: "",
+      isMartyVeteranRelative: false,
+      hasDisability: false,
     },
   })
 
-  useEffect(() => {
-    if (fileText) {
-      console.log('PDF File Text:', fileText)
-      form.setValue("document", JSON.stringify(fileText));
-    }
+  const watchResidenceStatus = form.watch("residenceStatus")
 
-  }, [fileText, form])
+  useEffect(() => {
+    const allDocuments = {
+      nufuz: fileTextNufuz,
+      total: fileTextTotal,
+      notort: fileTextNotort,
+      burs: fileTextBurs,
+      ogrbelge: fileTextOgrbelge,
+    };
+    form.setValue("document", JSON.stringify(allDocuments));
+  }, [fileTextNufuz, fileTextTotal, fileTextNotort, fileTextBurs, fileTextOgrbelge, form])
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true)
@@ -189,6 +217,114 @@ export function ScholarshipApplication() {
               />
               <FormField
                 control={form.control}
+                name="residenceStatus"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Residence Status during Education</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select your residence status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="rented">Rented</SelectItem>
+                        <SelectItem value="foundation_dormitory">Foundation Dormitory</SelectItem>
+                        <SelectItem value="kyk">KYK Dormitory</SelectItem>
+                        <SelectItem value="family">With Family</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {watchResidenceStatus && watchResidenceStatus !== "kyk" && (
+                <FormField
+                  control={form.control}
+                  name="monthlyFee"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Monthly Fee</FormLabel>
+                      <FormControl>
+                        <Input type="number" placeholder="Enter monthly fee" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+              <FormField
+                control={form.control}
+                name="iban"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>IBAN</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter your IBAN" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="bankAccountName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name Registered with Bank Account</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter the name registered with the bank account" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="isMartyVeteranRelative"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>
+                        Martyr/Veteran Relative
+                      </FormLabel>
+                      <FormDescription>
+                        Check this if you are a relative of a martyr or veteran.
+                      </FormDescription>
+                    </div>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="hasDisability"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>
+                        Physical Disability
+                      </FormLabel>
+                      <FormDescription>
+                        Check this if you have a physical disability.
+                      </FormDescription>
+                    </div>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
                 name="motivation"
                 render={({ field }) => (
                   <FormItem>
@@ -212,22 +348,35 @@ export function ScholarshipApplication() {
                 control={form.control}
                 name="document"
                 render={({ field }) => (
-                  <FileUpload
-                    setFileText={setFileText}
-                    form={form}
-                    {...field}
-                  >
+                  <FormItem>
+                    <FormLabel>Documents</FormLabel>
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2">Family Registration Certificate</h3>
+                        <FileUploadNufuz setFileText={setFileTextNufuz} />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2">Total Income Document</h3>
+                        <FileUploadTotal setFileText={setFileTextTotal} />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2">Transcript</h3>
+                        <FileUploadNotort setFileText={setFileTextNotort} />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2">Scholarship/Loan Document</h3>
+                        <FileUploadBurs setFileText={setFileTextBurs} />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2">Student Certificate</h3>
+                        <FileUploadOgrbelge setFileText={setFileTextOgrbelge} />
+                      </div>
+                    </div>
                     <FormMessage />
-                  </FileUpload>
+                  </FormItem>
                 )}
               />
 
-              {/* <div className='w-96'>
-                <FileUpload
-                  setFileText={setFileText}
-                  form={form}
-                />
-              </div> */}
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? "Submitting..." : "Submit Application"}
               </Button>

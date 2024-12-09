@@ -8,14 +8,20 @@ generator client {
 }
 
 model ScholarshipApplication {
-  id           String @id @default(uuid())
-  fullName     String
-  email        String
-  institution  String
-  studyField   String
-  academicYear String
-  motivation   String
-  document     String
+  id                     String   @id @default(uuid())
+  fullName               String
+  email                  String
+  institution            String
+  studyField             String
+  academicYear           String
+  motivation             String
+  document               String
+  residenceStatus        String
+  monthlyFee             String?
+  iban                   String
+  bankAccountName        String
+  isMartyVeteranRelative Boolean
+  hasDisability          Boolean
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -25,3 +31,4 @@ model Setting {
   key   String @id
   value String
 }
+
