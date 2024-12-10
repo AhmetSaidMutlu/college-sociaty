@@ -53,14 +53,14 @@ export default function AdminPanel() {
     fetchApplications()
   }, [])
 
-  const handleCommandSubmit = async (command: string, profileCriteria?: any) => {
+  const handleCommandSubmit = async () => {
     try {
       const res = await fetch('/api/chatgpt-command', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ command, applications, document: applications[0]?.document, profileCriteria }),
+        body: JSON.stringify({ command, applications, document }),
       })
 
       if (res.ok) {
