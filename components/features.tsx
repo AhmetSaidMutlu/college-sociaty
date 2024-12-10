@@ -3,24 +3,24 @@ import { Shield, BookOpen, Users, Globe } from 'lucide-react'
 
 const features = [
   {
-    icon: Shield,
-    title: "Cyber Security",
-    description: "Protecting businesses from digital threats",
-  },
-  {
     icon: BookOpen,
-    title: "Research",
-    description: "Advancing knowledge in business continuity",
+    title: "İlahiyat Eğitimi",
+    description: "İlahiyat alanında kaliteli eğitim vermek ve araştırmaları desteklemek.",
   },
   {
     icon: Users,
-    title: "Networking",
-    description: "Connecting professionals in the field",
+    title: "Toplumsal Dayanışma",
+    description: "Toplumun dini ve sosyal ihtiyaçlarına cevap vermek ve dayanışmayı teşvik etmek.",
   },
   {
     icon: Globe,
-    title: "Global Reach",
-    description: "Impacting businesses worldwide",
+    title: "Burs İmkanı",
+    description: "Öğrencilere ve araştırmacılara destek sağlamak amacıyla çeşitli burs imkanları sunmak.",
+  },
+  {
+    icon: Shield,
+    title: "Sosyal Sorumluluk",
+    description: "Sosyal sorumluluk bilinciyle hareket ederek, topluma faydalı projeler geliştirmek.",
   },
 ]
 
@@ -28,7 +28,7 @@ export default function Features() {
   return (
     <section className="py-16 bg-gray-50">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-bold text-center mb-12">Our Focus Areas</h2>
+        <h2 className="text-3xl font-bold text-center mb-12">Odak Alanlarımız</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {features.map((feature, index) => (
             <Card key={index}>
@@ -46,4 +46,3 @@ export default function Features() {
     </section>
   )
 }
-

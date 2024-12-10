@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Header from '@/components/header'
 import Hero from '@/components/hero'
 import Features from '@/components/features'
-import News from '@/components/news'
+
 import Footer from '@/components/footer'
 
 export default function Home() {
@@ -19,7 +19,7 @@ export default function Home() {
       <main className="flex-grow">
         <Hero />
         <Features />
-        <News />
+        
       </main>
       <Footer />
     </div>

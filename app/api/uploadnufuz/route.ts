@@ -35,8 +35,15 @@ function extractSpecificFields(rawText: string) {
     }
     if (line.includes("Boşanma:")) {
       const bosanmaIndex = line.indexOf("Boşanma:") + "Boşanma:".length;
-      result[currentPerson].bosanma = line.slice(bosanmaIndex).trim();
+      const bosanmaData = line.slice(bosanmaIndex).trim();
+    
+      if (bosanmaData === "----------") {
+        result[currentPerson].bosanma = "birlikte";
+      } else {
+        result[currentPerson].bosanma = "ayrı";
+      }
     }
+    
     
     if (line.includes("Babası")) {
       currentPerson = "baba";
