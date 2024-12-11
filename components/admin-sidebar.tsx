@@ -23,7 +23,6 @@ import {
 } from "@/components/ui/sidebar"
 import { useToast } from "@/hooks/use-toast"
 import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Card, CardContent } from "@/components/ui/card"
 import { Eye } from 'lucide-react'
 
@@ -55,6 +54,7 @@ const formSchema = z.object({
   martyrVeteranRelative: z.boolean().optional(),
   disabled: z.boolean().optional(),
 })
+
 
 const checkboxes = [
   { name: 'noIncome', label: 'Geliri olmayanlar' },
@@ -125,7 +125,7 @@ export function AdminSidebar({ onEyeClick }: { onEyeClick: (fullName: string) =>
       } else {
         throw new Error('Burs durumu güncellenemedi')
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Hata",
         description: "Burs durumu güncellenirken bir hata oluştu. Lütfen tekrar deneyin.",
@@ -291,4 +291,3 @@ export function AdminSidebar({ onEyeClick }: { onEyeClick: (fullName: string) =>
     </Sidebar>
   )
 }
-

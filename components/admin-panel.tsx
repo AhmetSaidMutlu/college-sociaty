@@ -29,18 +29,13 @@ interface ScholarshipApplication {
   createdAt: string;
 }
 
-interface RankedApplication {
-  fullName: string;
-  rank: number;
-  explanation: string;
-}
+
 
 export default function AdminPanel() {
   const [applications, setApplications] = useState<ScholarshipApplication[]>([])
-  const [response, setResponse] = useState<any>(null)
-  const [rankedList, setRankedList] = useState<RankedApplication[]>([])
+
   const [selectedApplicant, setSelectedApplicant] = useState<string | null>(null);
-  const command = 'your-default-command'; // Initialize command with a default value
+   
 
   useEffect(() => {
     async function fetchApplications() {
@@ -54,59 +49,7 @@ export default function AdminPanel() {
     fetchApplications()
   }, [])
 
-  const handleCommandSubmit = async (command: string, profileCriteria?: any) => {
-    try {
-      // Create a new object with only the necessary properties
-      const sanitizedApplications = applications.map(app => ({
-        id: app.id,
-        fullName: app.fullName,
-        email: app.email,
-        institution: app.institution,
-        tcKimlikNo: app.tcKimlikNo,
-        academicYear: app.academicYear,
-        motivation: app.motivation,
-        document: app.document,
-        residenceStatus: app.residenceStatus,
-        monthlyFee: app.monthlyFee,
-        iban: app.iban,
-        bankAccountName: app.bankAccountName,
-        isMartyVeteranRelative: app.isMartyVeteranRelative,
-        hasDisability: app.hasDisability,
-        familyEmploymentStatus: app.familyEmploymentStatus,
-        employmentType: app.employmentType,
-        monthlyNetIncome: app.monthlyNetIncome,
-        createdAt: app.createdAt
-      }));
 
-      const res = await fetch('/api/chatgpt-command', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          command, 
-          applications: sanitizedApplications, 
-          document: JSON.stringify(document),
-          profileCriteria 
-        }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        console.log('API Response:', data);
-        setResponse(data);
-        if (Array.isArray(data)) {
-          setRankedList(data);
-        }
-      } else {
-        console.error('Failed to fetch response from ChatGPT API');
-        setResponse(null);
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      setResponse(null);
-    }
-  };
 
   const parseDocument = (documentString: string) => {
     try {
@@ -130,37 +73,15 @@ export default function AdminPanel() {
     <SidebarProvider>
       <div className="flex h-screen overflow-hidden">
         <AdminSidebar 
-          onCommandSubmit={handleCommandSubmit} 
-          response={response} 
+           
+          
           onEyeClick={onViewApplicant}
         />
         <SidebarInset className="flex-grow overflow-hidden">
           <ScrollArea className="h-full">
             <div className="p-4">
               <h2 className="text-2xl font-semibold mb-4">Burs Başvuruları</h2>
-              {rankedList.length > 0 ? (
-                <div className="mb-8">
-                  <h3 className="text-xl font-semibold mb-2">Sıralanmış Başvurular</h3>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Sıra</TableHead>
-                        <TableHead>Tam Adı</TableHead>
-                        <TableHead>Açıklama</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {rankedList.map((app) => (
-                        <TableRow key={app.fullName}>
-                          <TableCell>{app.rank}</TableCell>
-                          <TableCell>{app.fullName}</TableCell>
-                          <TableCell>{app.explanation}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              ) : null}
+
               
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-1 sm:gap-2 md:gap-3 lg:gap-4 xl:gap-5">
                   {applications.map((application) => {

@@ -126,7 +126,7 @@ async function fetchApplications() {
     })
     
     const formattedApplications = applications.map(app => {
-      const document = app.document as any; // Type assertion for document field
+      const document = app.document as unknown as { [key: string]: { [key: string]: string } }; 
       return {
         ...app,
         memurOdenenMaas: document?.total?.["Toplam Ödenen"] || 'Belirtilmemiş',
@@ -145,4 +145,3 @@ async function fetchApplications() {
     await prisma.$disconnect()
   }
 }
-
