@@ -40,6 +40,7 @@ export default function AdminPanel() {
   const [response, setResponse] = useState<any>(null)
   const [rankedList, setRankedList] = useState<RankedApplication[]>([])
   const [selectedApplicant, setSelectedApplicant] = useState<string | null>(null);
+  const command = 'your-default-command'; // Initialize command with a default value
 
   useEffect(() => {
     async function fetchApplications() {
@@ -53,29 +54,59 @@ export default function AdminPanel() {
     fetchApplications()
   }, [])
 
-  const handleCommandSubmit = async () => {
+  const handleCommandSubmit = async (command: string, profileCriteria?: any) => {
     try {
+      // Create a new object with only the necessary properties
+      const sanitizedApplications = applications.map(app => ({
+        id: app.id,
+        fullName: app.fullName,
+        email: app.email,
+        institution: app.institution,
+        tcKimlikNo: app.tcKimlikNo,
+        academicYear: app.academicYear,
+        motivation: app.motivation,
+        document: app.document,
+        residenceStatus: app.residenceStatus,
+        monthlyFee: app.monthlyFee,
+        iban: app.iban,
+        bankAccountName: app.bankAccountName,
+        isMartyVeteranRelative: app.isMartyVeteranRelative,
+        hasDisability: app.hasDisability,
+        familyEmploymentStatus: app.familyEmploymentStatus,
+        employmentType: app.employmentType,
+        monthlyNetIncome: app.monthlyNetIncome,
+        createdAt: app.createdAt
+      }));
+
       const res = await fetch('/api/chatgpt-command', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ command, applications, document }),
-      })
+        body: JSON.stringify({ 
+          command, 
+          applications: sanitizedApplications, 
+          document: JSON.stringify(document),
+          profileCriteria 
+        }),
+      });
 
       if (res.ok) {
-        const data = await res.json()
-        console.log('API Response:', data) // Log the response
-        setResponse(data)
+        const data = await res.json();
+        console.log('API Response:', data);
+        setResponse(data);
+        if (Array.isArray(data)) {
+          setRankedList(data);
+        }
       } else {
-        console.error('Failed to fetch response from ChatGPT API')
-        setResponse(null)
+        console.error('Failed to fetch response from ChatGPT API');
+        setResponse(null);
       }
     } catch (error) {
-      console.error('Error:', error)
-      setResponse(null)
+      console.error('Error:', error);
+      setResponse(null);
     }
-  }
+  };
 
   const parseDocument = (documentString: string) => {
     try {
@@ -98,7 +129,11 @@ export default function AdminPanel() {
   return (
     <SidebarProvider>
       <div className="flex h-screen overflow-hidden">
-        <AdminSidebar onCommandSubmit={handleCommandSubmit} response={response} onViewApplicant={onViewApplicant} />
+        <AdminSidebar 
+          onCommandSubmit={handleCommandSubmit} 
+          response={response} 
+          onEyeClick={onViewApplicant}
+        />
         <SidebarInset className="flex-grow overflow-hidden">
           <ScrollArea className="h-full">
             <div className="p-4">
@@ -131,6 +166,7 @@ export default function AdminPanel() {
                   {applications.map((application) => {
                     const document = parseDocument(application.document)
                     return (
+                      
                       <Card 
                         key={application.id} 
                         className={`flex flex-col ${selectedApplicant === application.fullName ? 'border-2 border-green-500' : ''}`}
@@ -281,3 +317,4 @@ export default function AdminPanel() {
     </SidebarProvider>
   )
 }
+

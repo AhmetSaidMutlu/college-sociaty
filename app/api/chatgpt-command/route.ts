@@ -1,82 +1,68 @@
 import { NextResponse } from 'next/server'
 import { OpenAI } from 'openai'
+import { PrismaClient } from '@prisma/client'
 
+const prisma = new PrismaClient()
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 })
 
 export async function POST(request: Request) {
   try {
-    const { command, applications, document, profileCriteria } = await request.json()
+    const body = await request.json()
+    const { profileCriteria } = body
 
-    let prompt = ''
-
-    if (profileCriteria) {
-      prompt = `
-        Belirli kriterlere göre burs başvurularını analiz etmeye ve sıralamaya yardımcı olan bir asistansınız.
-        Her başvuru şu alanlara sahiptir: ${Object.keys(applications[0]).join(', ')}.
-
-        Yönetici, aşağıdaki profile sahip öğrencileri arıyor:
-        Geliri olmayanlar: ${profileCriteria.noIncome ? 'Evet' : 'Hayır'}
-        Toplam aile geliri 15000'nin altında olanlar: ${profileCriteria.incomeLessThan15000 ? 'Evet' : 'Hayır'}
-        Toplam aile geliri 25000'nin altında olanlar: ${profileCriteria.incomeLessThan25000 ? 'Evet' : 'Hayır'}
-        Toplam aile geliri 35000'nin altında olanlar: ${profileCriteria.incomeLessThan35000 ? 'Evet' : 'Hayır'}
-        Toplam aile geliri 50000'nin altında olanlar: ${profileCriteria.incomeLessThan50000 ? 'Evet' : 'Hayır'}
-        Toplam aile geliri 80000'nin altında olanlar: ${profileCriteria.incomeLessThan80000 ? 'Evet' : 'Hayır'}
-        Gelir sınırlaması yok: ${profileCriteria.noIncomeLimit ? 'Evet' : 'Hayır'}
-        Not ortalaması 1.00'in üstünde olanlar: ${profileCriteria.gpaAbove1 ? 'Evet' : 'Hayır'}
-        Not ortalaması 1.80'in üstünde olanlar: ${profileCriteria.gpaAbove1_8 ? 'Evet' : 'Hayır'}
-        Not ortalaması 2.00'in üstünde olanlar: ${profileCriteria.gpaAbove2 ? 'Evet' : 'Hayır'}
-        Not ortalaması 3.00'in üstünde olanlar: ${profileCriteria.gpaAbove3 ? 'Evet' : 'Hayır'}
-        Anne babası birlikte olanlar: ${profileCriteria.parentsLivingTogether ? 'Evet' : 'Hayır'}
-        Anne babası ayrı olanlar: ${profileCriteria.parentsSeparated ? 'Evet' : 'Hayır'}
-        Annesi sağ olmayanlar: ${profileCriteria.motherDeceased ? 'Evet' : 'Hayır'}
-        Babası sağ olmayanlar: ${profileCriteria.fatherDeceased ? 'Evet' : 'Hayır'}
-        İkisi de sağ olmayanlar: ${profileCriteria.bothParentsDeceased ? 'Evet' : 'Hayır'}
-        Burs alanlar: ${profileCriteria.receivingScholarship ? 'Evet' : 'Hayır'}
-        Öğrenci kredisi alanlar: ${profileCriteria.receivingStudentLoan ? 'Evet' : 'Hayır'}
-        Burs veya öğrenci kredisi almayanlar: ${profileCriteria.noScholarshipOrLoan ? 'Evet' : 'Hayır'}
-        Hazırlık sınıfındakiler: ${profileCriteria.preparatoryClass ? 'Evet' : 'Hayır'}
-        1. sınıftakiler: ${profileCriteria.firstYear ? 'Evet' : 'Hayır'}
-        2. sınıftakiler: ${profileCriteria.secondYear ? 'Evet' : 'Hayır'}
-        3. sınıftakiler: ${profileCriteria.thirdYear ? 'Evet' : 'Hayır'}
-        4. sınıftakiler: ${profileCriteria.fourthYear ? 'Evet' : 'Hayır'}
-        Şehit/gazi yakınları: ${profileCriteria.martyrVeteranRelative ? 'Evet' : 'Hayır'}
-        Engelliler: ${profileCriteria.disabled ? 'Evet' : 'Hayır'}
-
-        Lütfen bu kriterlere göre başvuruları en yakın eşleşmeden en uzak eşleşmeye doğru sıralayın.
-
-        Başvurular:
-        ${JSON.stringify(applications, null, 2)}
-
-        Basit bir nesne dizisi döndürün, her biri şunları içermelidir:
-        1. "fullName": Başvuru sahibinin tam adı
-        2. "rank": Başvuru sahibinin sırası (1 en yakın eşleşme)
-
-        Örnek format:
-        [
-          { "fullName": "John Doe", "rank": 1 },
-          { "fullName": "Jane Smith", "rank": 2 }
-        ]
-        Tüm başvuruları sırala. Yanıtınızın geçerli JSON olduğundan emin olun ve YALNIZCA JSON dizisini yanıtınıza dahil edin.
-      `
-    } else {
-      prompt = `
-        Burs başvurularını analiz etmeye yardımcı olan bir asistansınız.
-        Her başvuru şu alanlara sahiptir: ${Object.keys(applications[0]).join(', ')}.
-
-        Başvurular:
-        ${JSON.stringify(applications, null, 2)}
-
-        Komut:
-        "${command}"
-
-        Belge:
-        "${document}"
-
-        Komuta göre analiz sağlayın.
-      `
+    if (!profileCriteria) {
+      return NextResponse.json({ error: 'Missing profileCriteria' }, { status: 400 })
     }
+
+    const applications = await fetchApplications()
+
+    if (!applications || applications.length === 0) {
+      return NextResponse.json({ error: 'No applications found' }, { status: 400 })
+    }
+
+    const prompt = `
+      Belirli kriterlere göre burs başvurularını analiz etmeye ve sıralamaya yardımcı olan bir asistansınız.
+      Her başvuru şu alanlara sahiptir: ${Object.keys(applications[0]).join(', ')}.
+
+      Yönetici, aşağıdaki profile sahip öğrencileri arıyor:
+      ${Object.entries(profileCriteria)
+        .map(([key, value]) => `${key}: ${value ? 'Evet' : 'Hayır'}`)
+        .join('\n')}
+
+      Lütfen bu kriterlere göre başvuruları en yakın eşleşmeden en uzak eşleşmeye doğru sıralayın.
+
+      Başvurular:
+      ${applications.map(app => `
+        Başvuru Sahibi: ${app.fullName}
+        Kurum: ${app.institution}
+        Akademik Yıl: ${app.academicYear}
+        Motivasyon: ${app.motivation}
+        İkamet Durumu: ${app.residenceStatus}
+        Aylık Ücret: ${app.monthlyFee || 'Belirtilmemiş'}
+        Şehit/Gazi Yakını mı: ${app.isMartyVeteranRelative ? 'Evet' : 'Hayır'}
+        Engelli mi: ${app.hasDisability ? 'Evet' : 'Hayır'}
+        Aile İstihdam Durumu: ${app.familyEmploymentStatus}
+        İstihdam Türü: ${app.employmentType || 'Belirtilmemiş'}
+        Aylık Net Gelir: ${app.monthlyNetIncome || 'Belirtilmemiş'}
+        Memur Ödenen Maaş: ${app.memurOdenenMaas || 'Belirtilmemiş'}
+        Genel Not Ortalaması: ${app.genelNotOrtalamasi || 'Belirtilmemiş'}
+        Finansal Durum: ${app.finansalDurum || 'Belirtilmemiş'}
+        Sınıf: ${app.sinif || 'Belirtilmemiş'}
+      `).join('\n\n')}
+
+      Basit bir nesne dizisi döndürün, her biri şunları içermelidir:
+      1. "fullName": Başvuru sahibinin tam adı
+      2. "rank": Başvuru sahibinin sırası (1 en yakın eşleşme)
+
+      Örnek format:
+      [
+        { "fullName": "John Doe", "rank": 1 },
+        { "fullName": "Jane Smith", "rank": 2 }
+      ]
+      Tüm başvuruları sırala. Yanıtınızın geçerli JSON olduğundan emin olun ve YALNIZCA JSON dizisini yanıtınıza dahil edin.
+    `
 
     const response = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
@@ -89,38 +75,74 @@ export async function POST(request: Request) {
 
     const message = response.choices[0]?.message?.content || 'No response'
 
-    if (profileCriteria) {
-      try {
-        // Extract JSON content from the message
-        const jsonMatch = message.match(/\[[\s\S]*\]/);
-        if (!jsonMatch) {
-          throw new Error('No valid JSON found in the response');
-        }
-
-        const jsonContent = jsonMatch[0];
-        const rankedList = JSON.parse(jsonContent);
-        
-        if (!Array.isArray(rankedList)) {
-          throw new Error('Response is not an array');
-        }
-
-        // If parsing succeeds, return the ranked list
-        return NextResponse.json(rankedList);
-      } catch (error) {
-        console.error('Error parsing OpenAI response:', error);
-        console.error('Raw response:', message);
-        
-        // If parsing fails, return an error
-        return NextResponse.json({ 
-          error: 'Failed to parse ranking results', 
-          rawResponse: message 
-        }, { status: 500 });
+    try {
+      const jsonMatch = message.match(/\[[\s\S]*\]/)
+      if (!jsonMatch) {
+        throw new Error('No valid JSON found in the response')
       }
-    } else {
-      return NextResponse.json({ message })
+
+      const jsonContent = jsonMatch[0]
+      const rankedList = JSON.parse(jsonContent)
+      
+      if (!Array.isArray(rankedList)) {
+        throw new Error('Response is not an array')
+      }
+
+      console.log('Ranked list:', rankedList) // Log the ranked list
+      return NextResponse.json(rankedList)
+    } catch (error) {
+      console.error('Error parsing OpenAI response:', error)
+      console.error('Raw response:', message)
+      
+      return NextResponse.json({ 
+        error: 'Failed to parse ranking results', 
+        rawResponse: message 
+      }, { status: 500 })
     }
   } catch (error) {
     console.error('Error:', error)
     return NextResponse.json({ error: 'Failed to process the request' }, { status: 500 })
   }
 }
+
+async function fetchApplications() {
+  try {
+    const applications = await prisma.scholarshipApplication.findMany({
+      select: {
+        id: true,
+        fullName: true,
+        institution: true,
+        academicYear: true,
+        motivation: true,
+        document: true,
+        residenceStatus: true,
+        monthlyFee: true,
+        isMartyVeteranRelative: true,
+        hasDisability: true,
+        familyEmploymentStatus: true,
+        employmentType: true,
+        monthlyNetIncome: true,
+      }
+    })
+    
+    const formattedApplications = applications.map(app => {
+      const document = app.document as any; // Type assertion for document field
+      return {
+        ...app,
+        memurOdenenMaas: document?.total?.["Toplam Ödenen"] || 'Belirtilmemiş',
+        genelNotOrtalamasi: document?.notort?.["Genel Not Ortalaması"] || 'Belirtilmemiş',
+        finansalDurum: document?.burs?.finansal_durum || 'Belirtilmemiş',
+        sinif: document?.ogrbelge?.sınıf || document?.ogrbelge?.Sınıf || 'Belirtilmemiş',
+      };
+    });
+
+    console.log(`Toplam ${formattedApplications.length} başvuru çekildi.`)
+    return formattedApplications
+  } catch (error) {
+    console.error('Başvurular çekilirken hata oluştu:', error)
+    throw error
+  } finally {
+    await prisma.$disconnect()
+  }
+}
+

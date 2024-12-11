@@ -8,15 +8,10 @@ import { Button } from "@/components/ui/button"
 import {
   Form,
   FormControl,
-
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
 } from "@/components/ui/form"
-
-import { Textarea } from "@/components/ui/textarea"
-
 import { Checkbox } from "@/components/ui/checkbox"
 import { Switch } from "@/components/ui/switch"
 import {
@@ -24,14 +19,13 @@ import {
   SidebarContent,
   SidebarHeader,
   SidebarFooter,
-  SidebarTrigger,
+  SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { Menu, Eye } from 'lucide-react'
-import { Label } from '@/components/ui/label'
 import { useToast } from "@/hooks/use-toast"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Card, CardContent } from "@/components/ui/card"
+import { Eye } from 'lucide-react'
 
 const formSchema = z.object({
   noIncome: z.boolean().optional(),
@@ -62,12 +56,6 @@ const formSchema = z.object({
   disabled: z.boolean().optional(),
 })
 
-interface AdminSidebarProps {
-  onCommandSubmit: (command: string, profileCriteria?: any) => void
-  response: any[]
-  onViewApplicant: (fullName: string) => void
-}
-
 const checkboxes = [
   { name: 'noIncome', label: 'Geliri olmayanlar' },
   { name: 'incomeLessThan15000', label: 'Toplam aile geliri 15000\'nin altında olanlar' },
@@ -97,9 +85,54 @@ const checkboxes = [
   { name: 'disabled', label: 'Engelliler' },
 ]
 
-export function AdminSidebar({ onCommandSubmit, response, onViewApplicant }: AdminSidebarProps) {
-  const [isScholarshipEnabled, setIsScholarshipEnabled] = useState(false)
+interface Applicant {
+  fullName: string;
+  rank: number;
+}
+
+export function AdminSidebar({ onEyeClick }: { onEyeClick: (fullName: string) => void }) {
+  const [response, setResponse] = useState<Applicant[]>([])
+  const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
+  const [isScholarshipEnabled, setIsScholarshipEnabled] = useState(false)
+
+  useEffect(() => {
+    const fetchScholarshipStatus = async () => {
+      const response = await fetch('/api/scholarship-status')
+      const data = await response.json()
+      setIsScholarshipEnabled(data.isEnabled)
+    }
+
+    fetchScholarshipStatus()
+  }, [])
+
+  const handleScholarshipToggle = async () => {
+    try {
+      const response = await fetch('/api/scholarship-status', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isEnabled: !isScholarshipEnabled }),
+      })
+
+      if (response.ok) {
+        setIsScholarshipEnabled(!isScholarshipEnabled)
+        toast({
+          title: "Burs Başvuru Durumu Güncellendi",
+          description: `Burs başvurusu şu anda ${!isScholarshipEnabled ? 'açık' : 'kapalı'}.`,
+        })
+      } else {
+        throw new Error('Burs durumu güncellenemedi')
+      }
+    } catch (error) {
+      toast({
+        title: "Hata",
+        description: "Burs durumu güncellenirken bir hata oluştu. Lütfen tekrar deneyin.",
+        variant: "destructive",
+      })
+    }
+  }
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -133,135 +166,129 @@ export function AdminSidebar({ onCommandSubmit, response, onViewApplicant }: Adm
     },
   })
 
-  useEffect(() => {
-    const fetchScholarshipStatus = async () => {
-      const response = await fetch('/api/scholarship-status')
-      const data = await response.json()
-      setIsScholarshipEnabled(data.isEnabled)
-    }
-
-    fetchScholarshipStatus()
-  }, [])
-
-  const handleSubmit = (values: z.infer<typeof formSchema>) => {
-    onCommandSubmit('', values)
-  }
-
-  const handleScholarshipToggle = async () => {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    setIsLoading(true)
     try {
-      const response = await fetch('/api/scholarship-status', {
+      const res = await fetch('/api/chatgpt-command', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ isEnabled: !isScholarshipEnabled }),
+        body: JSON.stringify({ 
+          profileCriteria: values 
+        }),
       })
 
-      if (response.ok) {
-        setIsScholarshipEnabled(!isScholarshipEnabled)
+      if (!res.ok) {
+        const errorData = await res.json()
+        throw new Error(errorData.error || 'Failed to fetch response')
+      }
+
+      const data = await res.json()
+      console.log('API Response:', data) // Log the API response
+      if (Array.isArray(data)) {
+        setResponse(data)
         toast({
-          title: "Scholarship Application Status Updated",
-          description: `Scholarship application is now ${!isScholarshipEnabled ? 'enabled' : 'disabled'}.`,
+          title: "Başarılı",
+          description: "Sıralama başarıyla oluşturuldu.",
         })
       } else {
-        throw new Error('Failed to update scholarship status')
+        throw new Error('Invalid response format')
       }
     } catch (error) {
+      console.error('Error:', error)
       toast({
-        title: "Error",
-        description: "Failed to update scholarship status. Please try again.",
+        title: "Hata",
+        description: error instanceof Error ? error.message : "İşlem sırasında bir hata oluştu. Lütfen tekrar deneyin.",
         variant: "destructive",
       })
+    } finally {
+      setIsLoading(false)
     }
   }
 
   return (
-    <Sidebar collapsible="icon" className="h-screen flex flex-col">
-      <SidebarTrigger className="absolute top-4 left-2 z-50">
-        <Menu className="h-6 w-6" />
-      </SidebarTrigger>
-      <div className="group-data-[collapsible=icon]:hidden">
-        <SidebarHeader>
-          <h3 className="text-xl font-semibold mb-2 mt-10">Admin Paneli</h3>
-        </SidebarHeader>
-        <ScrollArea className="flex-grow overflow-y-auto" style={{ maxHeight: 'calc(100vh - 100px)' }}>
-          <SidebarContent className="flex flex-col">
-            <div className="flex flex-col gap-4 p-4">
-              
-            <div className="flex flex-col space-y-2">
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="scholarship-switch"
-                    checked={isScholarshipEnabled}
-                    onCheckedChange={handleScholarshipToggle}
-                  />
-                                  <Badge variant={isScholarshipEnabled ? "success" : "destructive"}>
-                  {isScholarshipEnabled
-                    ? "Burs başvurusu Açık"
-                    : "Burs Başvurusu kapalı"}
-                </Badge>
-                </div>
-
-                {!isScholarshipEnabled && (
-                  <p className="text-sm text-red-500 mt-2">
-                    Burs başvurusu açılmamıştır
-                  </p>
-                )}
-              </div>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-                  {checkboxes.map((checkbox) => (
-                    <div key={checkbox.name} className="border-b pb-2 mb-2">
-                      <FormField
-                        control={form.control}
-                        name={checkbox.name}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <Checkbox
-                                id={checkbox.name}
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                              />
-                            </FormControl>
-                            <FormLabel className="ml-2"htmlFor={checkbox.name}>{checkbox.label}</FormLabel>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  ))}
-                  <Button type="submit" isLoading={form.formState.isSubmitting} loadingText="AI'ye Sorunuyor...">AI'ye Sor</Button>
-                </form>
-              </Form>
-
-              {Array.isArray(response) ? response.map((applicant: { fullName: string, rank: number }, index: number) => (
-                <Card key={index}>
-                  <CardContent className="p-4 flex justify-between items-center">
-                    <span>{applicant.fullName}</span>
-                    <div className="flex items-center space-x-2">
-                      <Badge variant="secondary">Rank: {applicant.rank}</Badge>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onViewApplicant(applicant.fullName)}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              )) : (
-                <p>Sıralama Yapılmamıştır lütfen kriterleri giriniz</p>
-              )}
-
-              <SidebarFooter>
-                <p className="text-sm text-gray-500">Powered by ChatGPT</p>
-              </SidebarFooter>
+    <Sidebar>
+      <SidebarHeader>
+        <h3 className="text-xl font-semibold mb-2 p-4">Admin Paneli</h3>
+      </SidebarHeader>
+        <SidebarContent>
+          <div className="flex flex-col space-y-2 mb-4">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="scholarship-switch"
+                checked={isScholarshipEnabled}
+                onCheckedChange={handleScholarshipToggle}
+              />
+              <Badge variant={isScholarshipEnabled ? "success" : "destructive"}>
+                {isScholarshipEnabled
+                  ? "Burs başvurusu Açık"
+                  : "Burs Başvurusu kapalı"}
+              </Badge>
             </div>
-          </SidebarContent>
-        </ScrollArea>
-      </div>
+            {!isScholarshipEnabled && (
+              <p className="text-sm text-red-500">
+                Burs başvurusu açılmamıştır
+              </p>
+            )}
+          </div>
+          <div className="p-4">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                {checkboxes.map((checkbox) => (
+                  <FormField
+                    key={checkbox.name}
+                    control={form.control}
+                    name={checkbox.name as keyof z.infer<typeof formSchema>}
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormLabel className="font-normal">
+                          {checkbox.label}
+                        </FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                ))}
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? "İşleniyor..." : "AI'ye Sor"}
+                </Button>
+              </form>
+            </Form>
+
+            {response.length > 0 && (
+              <div className="mt-8">
+                <h4 className="text-lg font-semibold mb-4">Sıralama Sonuçları</h4>
+                {response.map((applicant, index) => (
+                  <SidebarMenuItem key={index}>
+                    <Card key={index} className="mb-4">
+                      <CardContent className="p-4 flex justify-between items-center">
+                        <span>{applicant.fullName}</span>
+                        <div className="flex items-center">
+                          <Badge variant="secondary" className="mr-2">Sıra: {applicant.rank}</Badge>
+                          <Eye 
+                            className="cursor-pointer" 
+                            onClick={() => onEyeClick(applicant.fullName)}
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </SidebarMenuItem>
+                ))}
+              </div>
+            )}
+          </div>
+        </SidebarContent>
+
+      <SidebarFooter className="p-4">
+        <p className="text-sm text-gray-500">Powered by ChatGPT</p>
+      </SidebarFooter>
     </Sidebar>
   )
 }
+
