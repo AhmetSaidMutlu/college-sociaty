@@ -7,14 +7,6 @@ import { AdminSidebar } from './admin-sidebar'
 import { SidebarProvider, SidebarInset } from './ui/sidebar'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table'
 import { Badge } from './ui/badge'
-import { Checkbox } from './ui/checkbox'
-import { Label } from './ui/label'
-import { 
-  Accordion, 
-  AccordionContent, 
-  AccordionItem, 
-  AccordionTrigger 
-} from './ui/accordion'
 
 interface ScholarshipApplication {
   id: string;
@@ -62,20 +54,6 @@ const filterGroups = [
         }
       },
       { 
-        name: 'incomeLessThan5000', 
-        label: 'Toplam aile geliri 5000\'nin altında olanlar', 
-        filter: (app: ScholarshipApplication) => {
-          return app.monthlyNetIncome && parseFloat(app.monthlyNetIncome) < 5000
-        }
-      },
-      { 
-        name: 'incomeLessThan10000', 
-        label: 'Toplam aile geliri 10000\'nin altında olanlar', 
-        filter: (app: ScholarshipApplication) => {
-          return app.monthlyNetIncome && parseFloat(app.monthlyNetIncome) < 10000
-        }
-      },
-      { 
         name: 'incomeLessThan15000', 
         label: 'Toplam aile geliri 15000\'nin altında olanlar', 
         filter: (app: ScholarshipApplication) => {
@@ -89,30 +67,73 @@ const filterGroups = [
           return app.monthlyNetIncome && parseFloat(app.monthlyNetIncome) < 25000
         }
       },
-    ]
-  },
-  {
-    name: 'Özel Durum',
-    filters: [
       { 
-        name: 'martyrVeteranRelative', 
-        label: 'Şehit/gazi yakınları', 
+        name: 'incomeLessThan35000', 
+        label: 'Toplam aile geliri 35000\'nin altında olanlar', 
         filter: (app: ScholarshipApplication) => {
-          return app.isMartyVeteranRelative
+          return app.monthlyNetIncome && parseFloat(app.monthlyNetIncome) < 35000
         }
       },
       { 
-        name: 'disabled', 
-        label: 'Engelliler', 
+        name: 'incomeLessThan50000', 
+        label: 'Toplam aile geliri 50000\'nin altında olanlar', 
         filter: (app: ScholarshipApplication) => {
-          return app.hasDisability
+          return app.monthlyNetIncome && parseFloat(app.monthlyNetIncome) < 50000
         }
+      },
+      { 
+        name: 'incomeLessThan80000', 
+        label: 'Toplam aile geliri 80000\'nin altında olanlar', 
+        filter: (app: ScholarshipApplication) => {
+          return app.monthlyNetIncome && parseFloat(app.monthlyNetIncome) < 80000
+        }
+      },
+      { 
+        name: 'noIncomeLimit', 
+        label: 'Gelir sınırlaması yok', 
+        filter: (app: ScholarshipApplication) => true
       },
     ]
   },
   {
     name: 'Akademik Bilgiler',
     filters: [
+      {
+        name: 'gpaAbove1', 
+        label: 'Not ortalaması 1.00\'in üstünde olanlar', 
+        filter: (app: ScholarshipApplication) => {
+          const document = parseDocument(app.document)
+          const gpa = document.notort ? parseFloat(document.notort["Genel Not Ortalaması"]) : 0
+          return gpa > 1.0
+        }
+      },
+      {
+        name: 'gpaAbove1_8', 
+        label: 'Not ortalaması 1.80\'in üstünde olanlar', 
+        filter: (app: ScholarshipApplication) => {
+          const document = parseDocument(app.document)
+          const gpa = document.notort ? parseFloat(document.notort["Genel Not Ortalaması"]) : 0
+          return gpa > 1.8
+        }
+      },
+      {
+        name: 'gpaAbove2', 
+        label: 'Not ortalaması 2.00\'in üstünde olanlar', 
+        filter: (app: ScholarshipApplication) => {
+          const document = parseDocument(app.document)
+          const gpa = document.notort ? parseFloat(document.notort["Genel Not Ortalaması"]) : 0
+          return gpa > 2.0
+        }
+      },
+      {
+        name: 'gpaAbove3', 
+        label: 'Not ortalaması 3.00\'in üstünde olanlar', 
+        filter: (app: ScholarshipApplication) => {
+          const document = parseDocument(app.document)
+          const gpa = document.notort ? parseFloat(document.notort["Genel Not Ortalaması"]) : 0
+          return gpa > 3.0
+        }
+      },
       { 
         name: 'preparatoryClass', 
         label: 'Hazırlık sınıfı', 
@@ -146,24 +167,6 @@ const filterGroups = [
         label: '4. sınıf', 
         filter: (app: ScholarshipApplication) => {
           return app.academicYear === '4'
-        }
-      },
-      {
-        name: 'gpaAbove2', 
-        label: 'Not ortalaması 2.00\'in üstünde olanlar', 
-        filter: (app: ScholarshipApplication) => {
-          const document = parseDocument(app.document)
-          const gpa = document.notort ? parseFloat(document.notort["Genel Not Ortalaması"]) : 0
-          return gpa > 2.0
-        }
-      },
-      {
-        name: 'gpaAbove3', 
-        label: 'Not ortalaması 3.00\'in üstünde olanlar', 
-        filter: (app: ScholarshipApplication) => {
-          const document = parseDocument(app.document)
-          const gpa = document.notort ? parseFloat(document.notort["Genel Not Ortalaması"]) : 0
-          return gpa > 3.0
         }
       },
     ]
@@ -203,6 +206,33 @@ const filterGroups = [
           return document.nufuz?.baba?.durum === 'Vefat'
         }
       },
+      { 
+        name: 'bothParentsDeceased', 
+        label: 'İkisi de sağ olmayanlar', 
+        filter: (app: ScholarshipApplication) => {
+          const document = parseDocument(app.document)
+          return document.nufuz?.anne?.durum === 'Vefat' && document.nufuz?.baba?.durum === 'Vefat'
+        }
+      },
+    ]
+  },
+  {
+    name: 'Özel Durum',
+    filters: [
+      { 
+        name: 'martyrVeteranRelative', 
+        label: 'Şehit/gazi yakınları', 
+        filter: (app: ScholarshipApplication) => {
+          return app.isMartyVeteranRelative
+        }
+      },
+      { 
+        name: 'disabled', 
+        label: 'Engelliler', 
+        filter: (app: ScholarshipApplication) => {
+          return app.hasDisability
+        }
+      },
     ]
   },
   {
@@ -223,14 +253,31 @@ const filterGroups = [
         }
       },
       { 
-        name: 'studyingSiblingCountAbove1', 
-        label: '1\'in üzerinde eğitim gören kardeşe sahip olanlar', 
+        name: 'siblingCountAbove3', 
+        label: '3\'ün üzerinde kardeşe sahip olanlar', 
         filter: (app: ScholarshipApplication) => {
-          return app.siblings.filter(sibling => 
-            sibling.educationStatus && 
-            sibling.educationStatus.toLowerCase() !== 'mezun' && 
-            sibling.educationStatus.toLowerCase() !== 'çalışmıyor'
-          ).length > 1
+          return app.siblings.length > 3
+        }
+      },
+      { 
+        name: 'siblingCountAbove4', 
+        label: '4\'ün üzerinde kardeşe sahip olanlar', 
+        filter: (app: ScholarshipApplication) => {
+          return app.siblings.length > 4
+        }
+      },
+      { 
+        name: 'siblingCountAbove5', 
+        label: '5\'in üzerinde kardeşe sahip olanlar', 
+        filter: (app: ScholarshipApplication) => {
+          return app.siblings.length > 5
+        }
+      },
+      { 
+        name: 'siblingCountAbove6', 
+        label: '6\'nın üzerinde kardeşe sahip olanlar', 
+        filter: (app: ScholarshipApplication) => {
+          return app.siblings.length > 6
         }
       },
       { 
@@ -242,6 +289,72 @@ const filterGroups = [
             sibling.educationStatus.toLowerCase() !== 'mezun' && 
             sibling.educationStatus.toLowerCase() !== 'çalışmıyor'
           ).length === 0
+        }
+      },
+      { 
+        name: 'studyingSiblingCountAbove1', 
+        label: '1\'in üzerinde eğitim gören kardeşe sahip olanlar', 
+        filter: (app: ScholarshipApplication) => {
+          return app.siblings.filter(sibling => 
+            sibling.educationStatus && 
+            sibling.educationStatus.toLowerCase() !== 'mezun' && 
+            sibling.educationStatus.toLowerCase() !== 'çalışmıyor'
+          ).length > 1
+        }
+      },
+      { 
+        name: 'studyingSiblingCountAbove2', 
+        label: '2\'nin üzerinde eğitim gören kardeşe sahip olanlar', 
+        filter: (app: ScholarshipApplication) => {
+          return app.siblings.filter(sibling => 
+            sibling.educationStatus && 
+            sibling.educationStatus.toLowerCase() !== 'mezun' && 
+            sibling.educationStatus.toLowerCase() !== 'çalışmıyor'
+          ).length > 2
+        }
+      },
+      { 
+        name: 'studyingSiblingCountAbove3', 
+        label: '3\'ün üzerinde eğitim gören kardeşe sahip olanlar', 
+        filter: (app: ScholarshipApplication) => {
+          return app.siblings.filter(sibling => 
+            sibling.educationStatus && 
+            sibling.educationStatus.toLowerCase() !== 'mezun' && 
+            sibling.educationStatus.toLowerCase() !== 'çalışmıyor'
+          ).length > 3
+        }
+      },
+      { 
+        name: 'studyingSiblingCountAbove4', 
+        label: '4\'ün üzerinde eğitim gören kardeşe sahip olanlar', 
+        filter: (app: ScholarshipApplication) => {
+          return app.siblings.filter(sibling => 
+            sibling.educationStatus && 
+            sibling.educationStatus.toLowerCase() !== 'mezun' && 
+            sibling.educationStatus.toLowerCase() !== 'çalışmıyor'
+          ).length > 4
+        }
+      },
+      { 
+        name: 'studyingSiblingCountAbove5', 
+        label: '5\'in üzerinde eğitim gören kardeşe sahip olanlar', 
+        filter: (app: ScholarshipApplication) => {
+          return app.siblings.filter(sibling => 
+            sibling.educationStatus && 
+            sibling.educationStatus.toLowerCase() !== 'mezun' && 
+            sibling.educationStatus.toLowerCase() !== 'çalışmıyor'
+          ).length > 5
+        }
+      },
+      { 
+        name: 'studyingSiblingCountAbove6', 
+        label: '6\'nın üzerinde eğitim gören kardeşe sahip olanlar', 
+        filter: (app: ScholarshipApplication) => {
+          return app.siblings.filter(sibling => 
+            sibling.educationStatus && 
+            sibling.educationStatus.toLowerCase() !== 'mezun' && 
+            sibling.educationStatus.toLowerCase() !== 'çalışmıyor'
+          ).length > 6
         }
       },
     ]
@@ -303,19 +416,13 @@ export default function AdminPanel() {
     }
   }
 
-  const handleFilterChange = (filterName: string) => {
-    setSelectedFilters(prevFilters => 
-      prevFilters.includes(filterName)
-        ? prevFilters.filter(f => f !== filterName)
-        : [...prevFilters, filterName]
-    )
+  const handleFilterChange = (filters: string[]) => {
+    setSelectedFilters(filters)
   }
 
   const filteredApplications = applications.filter(application => {
-    // If no filters are selected, show all applications
     if (selectedFilters.length === 0) return true
 
-    // Check if the application meets all selected filter conditions
     return selectedFilters.every(filterName => {
       const filterCondition = filterGroups
         .flatMap(group => group.filters)
@@ -324,15 +431,12 @@ export default function AdminPanel() {
     })
   })
 
-  const clearAllFilters = () => {
-    setSelectedFilters([])
-  }
-
   return (
     <SidebarProvider>
       <div className="flex h-screen overflow-hidden">
         <AdminSidebar 
           onEyeClick={onViewApplicant}
+          onFilterChange={handleFilterChange}
         />
         
         <SidebarInset className="flex-grow overflow-hidden">
@@ -344,42 +448,6 @@ export default function AdminPanel() {
                   ({filteredApplications.length} / {applications.length})
                 </span>
               </h2>
-
-              {/* Filtering Section */}
-              <Accordion type="multiple" className="mb-4">
-                {filterGroups.map((group, groupIndex) => (
-                  <AccordionItem value={`group-${groupIndex}`} key={group.name}>
-                    <AccordionTrigger>{group.name}</AccordionTrigger>
-                    <AccordionContent>
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                        {group.filters.map((checkbox) => (
-                          <div key={checkbox.name} className="flex items-center space-x-2">
-                            <Checkbox 
-                              id={checkbox.name}
-                              checked={selectedFilters.includes(checkbox.name)}
-                              onCheckedChange={() => handleFilterChange(checkbox.name)}
-                            />
-                            <Label htmlFor={checkbox.name} className="cursor-pointer">
-                              {checkbox.label}
-                            </Label>
-                          </div>
-                        ))}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-
-              {selectedFilters.length > 0 && (
-                <div className="mb-4">
-                  <button 
-                    onClick={clearAllFilters}
-                    className="text-red-500 hover:text-red-700 underline"
-                  >
-                    Tüm Filtreleri Temizle
-                  </button>
-                </div>
-              )}
               
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-1 sm:gap-2 md:gap-3 lg:gap-4 xl:gap-5">
                 {filteredApplications.map((application) => {
@@ -424,6 +492,10 @@ export default function AdminPanel() {
                             <Table>
                               <TableBody>
                                 <TableRow>
+                                  <TableCell className="font-medium">Aylık Net Gelir</TableCell>
+                                  <TableCell>{application.monthlyNetIncome || 'N/A'}</TableCell>
+                                </TableRow>
+                                <TableRow>
                                   <TableCell className="font-medium">Kira/Yurt Aylık Ücret</TableCell>
                                   <TableCell>{application.monthlyFee || 'N/A'}</TableCell>
                                 </TableRow>
@@ -434,6 +506,14 @@ export default function AdminPanel() {
                                 <TableRow>
                                   <TableCell className="font-medium">Banka Hesap Adı</TableCell>
                                   <TableCell>{application.bankAccountName}</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell className="font-medium">Aile İstihdam Durumu</TableCell>
+                                  <TableCell>{application.familyEmploymentStatus}</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell className="font-medium">İstihdam Türü</TableCell>
+                                  <TableCell>{application.employmentType || 'N/A'}</TableCell>
                                 </TableRow>
                                 <TableRow>
                                   <TableCell className="font-medium">Şehit/Gazi Yakını</TableCell>
