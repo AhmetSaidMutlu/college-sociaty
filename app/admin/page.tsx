@@ -11,11 +11,17 @@ export default function AdminPage() {
 
   // If the user data is still loading, show a loading state
   if (!isLoaded) {
-    return <p>Loading...</p>;
+    console.log(isLoaded);
+    
+    return (<>
+      {/* <p>Loading...</p> */}
+      <SignInButton>
+        <button className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-700 mb-2">Login</button>
+      </SignInButton>
+    </>);
   }
 
   const isAdmin = user?.publicMetadata?.role === 'admin';
-
   if (!isAdmin) {
     return (
       <div className="flex flex-col items-center justify-center h-screen">
@@ -29,10 +35,12 @@ export default function AdminPage() {
       </div>
     );
   }
+  else {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <AdminPanel />
+      </div>
+    );
+  }
 
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <AdminPanel />
-    </div>
-  );
 }

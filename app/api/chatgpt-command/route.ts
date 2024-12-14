@@ -7,15 +7,8 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 })
 
-export async function POST(request: Request) {
+export async function POST() {
   try {
-    const body = await request.json()
-    const { profileCriteria } = body
-
-    if (!profileCriteria) {
-      return NextResponse.json({ error: 'Missing profileCriteria' }, { status: 400 })
-    }
-
     const applications = await fetchApplications()
 
     if (!applications || applications.length === 0) {
@@ -23,17 +16,16 @@ export async function POST(request: Request) {
     }
 
     const prompt = `
-      Belirli kriterlere göre burs başvurularını analiz etmeye ve sıralamaya yardımcı olan bir asistansınız.
+      Burs başvurularını analiz etmeye ve sıralamaya yardımcı olan bir asistansınız.
       Her başvuru şu alanlara sahiptir: ${Object.keys(applications[0]).join(', ')}.
 
       Önemli Not: Eğer bir başvuruda kardeş bilgisi girilmemişse, o öğrenciyi tek çocuk olarak değerlendirin.
 
-      Yönetici, aşağıdaki profile sahip öğrencileri arıyor:
-      ${Object.entries(profileCriteria)
-        .map(([key, value]) => `${key}: ${value ? 'Evet' : 'Hayır'}`)
-        .join('\n')}
-
-      Lütfen bu kriterlere göre başvuruları en yakın eşleşmeden en uzak eşleşmeye doğru sıralayın. Kardeş bilgisi olmayan başvuruları tek çocuk olarak değerlendirin.
+      Lütfen aşağıdaki kriterleri göz önünde bulundurarak başvuruları en çok ihtiyaç sahibinden en az ihtiyaç sahibine doğru sıralayın:
+      1. Şehit/Gazi Yakını durumu
+      2. Aylık Net Gelir (memur ise Memur Ödenen Maaş)
+      3. Genel Not Ortalaması
+      4. Eğitim gören kardeş sayısı
 
       Başvurular:
       ${applications.map(app => `
@@ -58,14 +50,12 @@ export async function POST(request: Request) {
 
       Basit bir nesne dizisi döndürün, her biri şunları içermelidir:
       1. "fullName": Başvuru sahibinin tam adı
-      2. "rank": Başvuru sahibinin sırası (1 en yakın eşleşme)
-      3. Eğitim Gören Kardeş Sayısı: 2
-      4. Kardeş Sayısı: 3
+      2. "rank": Başvuru sahibinin sırası (1 en çok ihtiyaç sahibi)
 
       Örnek format:
       [
-        { "fullName": "John Doe", "rank": 1, Eğitim Gören Kardeş Sayısı: 2 , Kardeş Sayısı: 3  },
-        { "fullName": "Jane Smith", "rank": 2 Eğitim Gören Kardeş Sayısı: 1 , Kardeş Sayısı: 2 }
+        { "fullName": "John Doe", "rank": 1 },
+        { "fullName": "Jane Smith", "rank": 2 }
       ]
       Tüm başvuruları sırala. Yanıtınızın geçerli JSON olduğundan emin olun ve YALNIZCA JSON dizisini yanıtınıza dahil edin.
     `
@@ -73,7 +63,7 @@ export async function POST(request: Request) {
     const response = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [
-        { role: 'system', content: 'Senburs başvurularını analiz eden, Başvuruları katagorize etmek ve sıralamaya yardımcı olan bir asistansın. Always respond with valid JSON.' },
+        { role: 'system', content: 'Sen burs başvurularını analiz eden, başvuruları kategorize etmek ve sıralamaya yardımcı olan bir asistansın. Always respond with valid JSON.' },
         { role: 'user', content: prompt },
       ],
       max_tokens: 1000,
@@ -94,7 +84,7 @@ export async function POST(request: Request) {
         throw new Error('Response is not an array')
       }
 
-      console.log('Ranked list:', rankedList) // Log the ranked list
+      console.log('Ranked list:', rankedList)
       return NextResponse.json(rankedList)
     } catch (error) {
       console.error('Error parsing OpenAI response:', error)
