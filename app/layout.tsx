@@ -9,8 +9,8 @@ import { trTR } from '@clerk/localizations'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
-  title: 'CIBSOC Clone',
-  description: 'A clone of the CIBSOC website using Shadcn UI',
+  title: 'Erzincan İlahiyat Derneği',
+  description: 'Erzincan İlahiyat Derneği resmi sitesi',
 }
 
 export default function RootLayout({

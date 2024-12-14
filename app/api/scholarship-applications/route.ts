@@ -8,6 +8,9 @@ export async function GET() {
     const scholarshipApplications = await prisma.scholarshipApplication.findMany({
       orderBy: {
         createdAt: 'desc'
+      },
+      include: {
+        siblings: true
       }
     })
     return NextResponse.json(scholarshipApplications)
@@ -23,9 +26,20 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
+    const { siblings, ...scholarshipData } = body
+
     const scholarshipApplication = await prisma.scholarshipApplication.create({
-      data: body,
+      data: {
+        ...scholarshipData,
+        siblings: {
+          create: siblings
+        }
+      },
+      include: {
+        siblings: true
+      }
     })
+
     return NextResponse.json(scholarshipApplication)
   } catch (error) {
     console.error('Failed to create scholarship application:', error)

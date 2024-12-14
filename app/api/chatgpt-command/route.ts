@@ -26,12 +26,14 @@ export async function POST(request: Request) {
       Belirli kriterlere göre burs başvurularını analiz etmeye ve sıralamaya yardımcı olan bir asistansınız.
       Her başvuru şu alanlara sahiptir: ${Object.keys(applications[0]).join(', ')}.
 
+      Önemli Not: Eğer bir başvuruda kardeş bilgisi girilmemişse, o öğrenciyi tek çocuk olarak değerlendirin.
+
       Yönetici, aşağıdaki profile sahip öğrencileri arıyor:
       ${Object.entries(profileCriteria)
         .map(([key, value]) => `${key}: ${value ? 'Evet' : 'Hayır'}`)
         .join('\n')}
 
-      Lütfen bu kriterlere göre başvuruları en yakın eşleşmeden en uzak eşleşmeye doğru sıralayın.
+      Lütfen bu kriterlere göre başvuruları en yakın eşleşmeden en uzak eşleşmeye doğru sıralayın. Kardeş bilgisi olmayan başvuruları tek çocuk olarak değerlendirin.
 
       Başvurular:
       ${applications.map(app => `
@@ -50,16 +52,20 @@ export async function POST(request: Request) {
         Genel Not Ortalaması: ${app.genelNotOrtalamasi || 'Belirtilmemiş'}
         Finansal Durum: ${app.finansalDurum || 'Belirtilmemiş'}
         Sınıf: ${app.sinif || 'Belirtilmemiş'}
+        Kardeş Sayısı: ${app.siblings.length}
+        Eğitim Gören Kardeş Sayısı: ${app.siblings.filter(sibling => sibling.educationStatus !== 'Çalışıyor' && sibling.educationStatus !== '0-6 yaş arası').length}
       `).join('\n\n')}
 
       Basit bir nesne dizisi döndürün, her biri şunları içermelidir:
       1. "fullName": Başvuru sahibinin tam adı
       2. "rank": Başvuru sahibinin sırası (1 en yakın eşleşme)
+      3. Eğitim Gören Kardeş Sayısı: 2
+      4. Kardeş Sayısı: 3
 
       Örnek format:
       [
-        { "fullName": "John Doe", "rank": 1 },
-        { "fullName": "Jane Smith", "rank": 2 }
+        { "fullName": "John Doe", "rank": 1, Eğitim Gören Kardeş Sayısı: 2 , Kardeş Sayısı: 3  },
+        { "fullName": "Jane Smith", "rank": 2 Eğitim Gören Kardeş Sayısı: 1 , Kardeş Sayısı: 2 }
       ]
       Tüm başvuruları sırala. Yanıtınızın geçerli JSON olduğundan emin olun ve YALNIZCA JSON dizisini yanıtınıza dahil edin.
     `
@@ -67,7 +73,7 @@ export async function POST(request: Request) {
     const response = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [
-        { role: 'system', content: 'You are a helpful assistant. Always respond with valid JSON.' },
+        { role: 'system', content: 'Senburs başvurularını analiz eden, Başvuruları katagorize etmek ve sıralamaya yardımcı olan bir asistansın. Always respond with valid JSON.' },
         { role: 'user', content: prompt },
       ],
       max_tokens: 1000,
@@ -122,6 +128,12 @@ async function fetchApplications() {
         familyEmploymentStatus: true,
         employmentType: true,
         monthlyNetIncome: true,
+        siblings: {
+          select: {
+            name: true,
+            educationStatus: true,
+          },
+        },
       }
     })
     
@@ -133,6 +145,8 @@ async function fetchApplications() {
         genelNotOrtalamasi: document?.notort?.["Genel Not Ortalaması"] || 'Belirtilmemiş',
         finansalDurum: document?.burs?.finansal_durum || 'Belirtilmemiş',
         sinif: document?.ogrbelge?.sınıf || document?.ogrbelge?.Sınıf || 'Belirtilmemiş',
+        siblingCount: app.siblings.length,
+        siblingsInEducation: app.siblings.filter(sibling => sibling.educationStatus !== 'Çalışıyor' && sibling.educationStatus !== '0-6 yaş arası').length
       };
     });
 
@@ -145,3 +159,4 @@ async function fetchApplications() {
     await prisma.$disconnect()
   }
 }
+

@@ -35,6 +35,7 @@ import FileUploadTotal from "./file-uploadtotal"
 import FileUploadNotort from "./file-uploadnotort"
 import FileUploadBurs from "./file-uploadburs"
 import FileUploadOgrbelge from "./file-uploadogrbelge"
+import { SiblingInfo } from "./SiblingInfo"
 
 const formSchema = z.object({
   fullName: z.string().min(2, {
@@ -52,9 +53,7 @@ const formSchema = z.object({
   academicYear: z.string({
     required_error: "Lütfen mevcut akademik yılınızı seçin.",
   }),
-  motivation: z.string().min(50, {
-    message: "Motivasyon mektubu en az 50 karakter olmalıdır.",
-  }),
+  motivation: z.string(),
   document: z.string().min(5, {
     message: "Lütfen gerekli tüm belgeleri yükleyin.",
   }),
@@ -75,6 +74,12 @@ const formSchema = z.object({
   }),
   employmentType: z.string().optional(),
   monthlyNetIncome: z.string().optional(),
+  siblings: z.array(
+    z.object({
+      name: z.string().min(1, "Kardeş adı gereklidir"),
+      educationStatus: z.string().min(1, "Eğitim durumu seçilmelidir"),
+    })
+  ),
 })
 
 export function ScholarshipApplication() {
@@ -108,7 +113,7 @@ export function ScholarshipApplication() {
       familyEmploymentStatus: "",
       employmentType: "",
       monthlyNetIncome: "",
-      
+      siblings: [],
     },
   })
 
@@ -443,6 +448,7 @@ export function ScholarshipApplication() {
                   </FormItem>
                 )}
               />
+              <SiblingInfo control={form.control} register={form.register} />
               <FormField
                 control={form.control}
                 name="familyEmploymentStatus"
@@ -517,7 +523,7 @@ export function ScholarshipApplication() {
                 name="motivation"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-lg font-medium">Motivasyon Beyanı</FormLabel>
+                    <FormLabel className="text-lg font-medium">Eklemek istediğiniz özel durum</FormLabel>
                     <FormControl>
                       <Textarea
                         placeholder="Burs başvurusunun nedenlerini ve hedeflerinize nasıl yardımcı olacağını anlatın."
@@ -525,9 +531,6 @@ export function ScholarshipApplication() {
                         {...field}
                       />
                     </FormControl>
-                    <FormDescription>
-                      En az 50 karakter. Siber güvenlik ve iş sürekliliğine olan ilginizi açıklayın.
-                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -541,24 +544,24 @@ export function ScholarshipApplication() {
                     <FormLabel className="text-lg font-medium">Belgeler</FormLabel>
                     <div className="space-y-4">
                       <div>
-                        <FormLabel className="text-lg font-medium">Aile Kayıt Belgesi</FormLabel>
+                        <FormLabel className="text-lg font-medium">Nüfus Kayıt Örneği Belgesi</FormLabel>
                         <FormDescription>Aile kayıt belgenizi yükleyin.</FormDescription>
                         <FileUploadNufuz setFileText={setFileTextNufuz} />
                       </div>
                       {form.watch("employmentType") === "memur" && (
                         <div>
-                          <FormLabel className="text-lg font-medium">Toplam Gelir Belgesi</FormLabel>
+                          <FormLabel className="text-lg font-medium">memurlar için Bordro(Gelir Belgesi)</FormLabel>
                           <FormDescription>Toplam gelir belgenizi yükleyin.</FormDescription>
                           <FileUploadTotal setFileText={setFileTextTotal} />
                         </div>
                       )}
                       <div>
-                        <FormLabel className="text-lg font-medium">Transkript</FormLabel>
+                        <FormLabel className="text-lg font-medium">Transkript Belgesi</FormLabel>
                         <FormDescription>Transkriptinizi yükleyin.</FormDescription>
                         <FileUploadNotort setFileText={setFileTextNotort} />
                       </div>
                       <div>
-                        <FormLabel className="text-lg font-medium">Burs/Kredi Belgesi</FormLabel>
+                        <FormLabel className="text-lg font-medium">Kredi / Burs Durum Belgesi</FormLabel>
                         <FormDescription>Burs veya kredi belgenizi yükleyin.</FormDescription>
                         <FileUploadBurs setFileText={setFileTextBurs} />
                       </div>
@@ -572,6 +575,8 @@ export function ScholarshipApplication() {
                   </FormItem>
                 )}
               />
+
+              
 
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? "Gönderiliyor..." : "Başvuruyu Gönder"}

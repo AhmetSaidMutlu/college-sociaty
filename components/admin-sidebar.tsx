@@ -53,6 +53,19 @@ const formSchema = z.object({
   fourthYear: z.boolean().optional(),
   martyrVeteranRelative: z.boolean().optional(),
   disabled: z.boolean().optional(),
+  siblingCountAbove1: z.boolean().optional(),
+  siblingCountAbove2: z.boolean().optional(),
+  siblingCountAbove3: z.boolean().optional(),
+  siblingCountAbove4: z.boolean().optional(),
+  siblingCountAbove5: z.boolean().optional(),
+  siblingCountAbove6: z.boolean().optional(),
+  onlyChildStudying: z.boolean().optional(),
+  studyingSiblingCountAbove1: z.boolean().optional(),
+  studyingSiblingCountAbove2: z.boolean().optional(),
+  studyingSiblingCountAbove3: z.boolean().optional(),
+  studyingSiblingCountAbove4: z.boolean().optional(),
+  studyingSiblingCountAbove5: z.boolean().optional(),
+  studyingSiblingCountAbove6: z.boolean().optional(),
 })
 
 
@@ -83,6 +96,19 @@ const checkboxes = [
   { name: 'fourthYear', label: '4. sınıftakiler' },
   { name: 'martyrVeteranRelative', label: 'Şehit/gazi yakınları' },
   { name: 'disabled', label: 'Engelliler' },
+  { name: 'siblingCountAbove1', label: '1\'in üzerinde kardeşe sahip olanlar' },
+  { name: 'siblingCountAbove2', label: '2\'nin üzerinde kardeşe sahip olanlar' },
+  { name: 'siblingCountAbove3', label: '3\'ün üzerinde kardeşe sahip olanlar' },
+  { name: 'siblingCountAbove4', label: '4\'ün üzerinde kardeşe sahip olanlar' },
+  { name: 'siblingCountAbove5', label: '5\'in üzerinde kardeşe sahip olanlar' },
+  { name: 'siblingCountAbove6', label: '6\'nın üzerinde kardeşe sahip olanlar' },
+  { name: 'onlyChildStudying', label: 'Okuyan tek çocuk' },
+  { name: 'studyingSiblingCountAbove1', label: '1\'in üzerinde eğitim gören kardeşe sahip olanlar' },
+  { name: 'studyingSiblingCountAbove2', label: '2\'nin üzerinde eğitim gören kardeşe sahip olanlar' },
+  { name: 'studyingSiblingCountAbove3', label: '3\'ün üzerinde eğitim gören kardeşe sahip olanlar' },
+  { name: 'studyingSiblingCountAbove4', label: '4\'ün üzerinde eğitim gören kardeşe sahip olanlar' },
+  { name: 'studyingSiblingCountAbove5', label: '5\'in üzerinde eğitim gören kardeşe sahip olanlar' },
+  { name: 'studyingSiblingCountAbove6', label: '6\'nın üzerinde eğitim gören kardeşe sahip olanlar' },
 ]
 
 interface Applicant {
@@ -163,6 +189,19 @@ export function AdminSidebar({ onEyeClick }: { onEyeClick: (fullName: string) =>
       fourthYear: false,
       martyrVeteranRelative: false,
       disabled: false,
+      siblingCountAbove1: false,
+      siblingCountAbove2: false,
+      siblingCountAbove3: false,
+      siblingCountAbove4: false,
+      siblingCountAbove5: false,
+      siblingCountAbove6: false,
+      onlyChildStudying: false,
+      studyingSiblingCountAbove1: false,
+      studyingSiblingCountAbove2: false,
+      studyingSiblingCountAbove3: false,
+      studyingSiblingCountAbove4: false,
+      studyingSiblingCountAbove5: false,
+      studyingSiblingCountAbove6: false,
     },
   })
 
@@ -291,3 +330,4 @@ export function AdminSidebar({ onEyeClick }: { onEyeClick: (fullName: string) =>
     </Sidebar>
   )
 }
+

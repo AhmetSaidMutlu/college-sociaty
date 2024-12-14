@@ -27,6 +27,10 @@ interface ScholarshipApplication {
   employmentType: string | null;
   monthlyNetIncome: string | null;
   createdAt: string;
+  siblings: Array<{
+    name: string;
+    educationStatus: string;
+  }>;
 }
 
 
@@ -158,6 +162,25 @@ export default function AdminPanel() {
                             </Table>
                           </details>
                           <details className="mt-4">
+                            <summary className="cursor-pointer text-blue-600 hover:underline">Kardeş Bilgileri</summary>
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Ad</TableHead>
+                                  <TableHead>Eğitim Durumu</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {application.siblings.map((sibling, index) => (
+                                  <TableRow key={index}>
+                                    <TableCell>{sibling.name}</TableCell>
+                                    <TableCell>{sibling.educationStatus}</TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </details>
+                          <details className="mt-4">
                             <summary className="cursor-pointer text-blue-600 hover:underline">Motivasyon Yazısı</summary>
                             <p className="mt-2">{application.motivation}</p>
                           </details>
@@ -216,10 +239,16 @@ export default function AdminPanel() {
                                     </TableRow>
                                   )}
                                   {document.ogrbelge && (
-                                    <TableRow>
-                                      <TableCell className="font-medium">Sınıf</TableCell>
-                                      <TableCell>{document.ogrbelge.sınıf || document.ogrbelge.Sınıf || 'N/A'}</TableCell>
-                                    </TableRow>
+                                    <>
+                                      <TableRow>
+                                        <TableCell className="font-medium">Sınıf</TableCell>
+                                        <TableCell>{document.ogrbelge.sınıf || document.ogrbelge.Sınıf || 'N/A'}</TableCell>
+                                      </TableRow>
+                                      <TableRow>
+                                        <TableCell className="font-medium">Program</TableCell>
+                                        <TableCell>{document.ogrbelge.program || document.ogrbelge.Program || 'N/A'}</TableCell>
+                                      </TableRow>
+                                    </>
                                   )}
                                 </TableBody>
                               </Table>
