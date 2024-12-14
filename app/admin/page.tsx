@@ -1,6 +1,4 @@
-
 "use client";
-
 
 import AdminPanel from '@/components/admin-panel';
 import { useUser } from '@clerk/nextjs';
@@ -12,7 +10,7 @@ export default function AdminPage() {
   // If the user data is still loading, show a loading state
   if (!isLoaded) {
     console.log(isLoaded);
-    
+
     return (<>
       {/* <p>Loading...</p> */}
       <SignInButton>
@@ -42,5 +40,4 @@ export default function AdminPage() {
       </div>
     );
   }
-
 }

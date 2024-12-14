@@ -7,6 +7,14 @@ import { AdminSidebar } from './admin-sidebar'
 import { SidebarProvider, SidebarInset } from './ui/sidebar'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table'
 import { Badge } from './ui/badge'
+import { Checkbox } from './ui/checkbox'
+import { Label } from './ui/label'
+import { 
+  Accordion, 
+  AccordionContent, 
+  AccordionItem, 
+  AccordionTrigger 
+} from './ui/accordion'
 
 interface ScholarshipApplication {
   id: string;
@@ -33,13 +41,247 @@ interface ScholarshipApplication {
   }>;
 }
 
+const parseDocument = (documentString: string) => {
+  try {
+    return JSON.parse(documentString)
+  } catch (error) {
+    console.error('Error parsing document:', error)
+    return {}
+  }
+}
 
+const filterGroups = [
+  {
+    name: 'Gelir Durumu',
+    filters: [
+      { 
+        name: 'noIncome', 
+        label: 'Geliri olmayanlar', 
+        filter: (app: ScholarshipApplication) => {
+          return !app.monthlyNetIncome || parseFloat(app.monthlyNetIncome) === 0
+        }
+      },
+      { 
+        name: 'incomeLessThan5000', 
+        label: 'Toplam aile geliri 5000\'nin altında olanlar', 
+        filter: (app: ScholarshipApplication) => {
+          return app.monthlyNetIncome && parseFloat(app.monthlyNetIncome) < 5000
+        }
+      },
+      { 
+        name: 'incomeLessThan10000', 
+        label: 'Toplam aile geliri 10000\'nin altında olanlar', 
+        filter: (app: ScholarshipApplication) => {
+          return app.monthlyNetIncome && parseFloat(app.monthlyNetIncome) < 10000
+        }
+      },
+      { 
+        name: 'incomeLessThan15000', 
+        label: 'Toplam aile geliri 15000\'nin altında olanlar', 
+        filter: (app: ScholarshipApplication) => {
+          return app.monthlyNetIncome && parseFloat(app.monthlyNetIncome) < 15000
+        }
+      },
+      { 
+        name: 'incomeLessThan25000', 
+        label: 'Toplam aile geliri 25000\'nin altında olanlar', 
+        filter: (app: ScholarshipApplication) => {
+          return app.monthlyNetIncome && parseFloat(app.monthlyNetIncome) < 25000
+        }
+      },
+    ]
+  },
+  {
+    name: 'Özel Durum',
+    filters: [
+      { 
+        name: 'martyrVeteranRelative', 
+        label: 'Şehit/gazi yakınları', 
+        filter: (app: ScholarshipApplication) => {
+          return app.isMartyVeteranRelative
+        }
+      },
+      { 
+        name: 'disabled', 
+        label: 'Engelliler', 
+        filter: (app: ScholarshipApplication) => {
+          return app.hasDisability
+        }
+      },
+    ]
+  },
+  {
+    name: 'Akademik Bilgiler',
+    filters: [
+      { 
+        name: 'preparatoryClass', 
+        label: 'Hazırlık sınıfı', 
+        filter: (app: ScholarshipApplication) => {
+          return app.academicYear === 'Hazırlık'
+        }
+      },
+      { 
+        name: 'firstYear', 
+        label: '1. sınıf', 
+        filter: (app: ScholarshipApplication) => {
+          return app.academicYear === '1'
+        }
+      },
+      { 
+        name: 'secondYear', 
+        label: '2. sınıf', 
+        filter: (app: ScholarshipApplication) => {
+          return app.academicYear === '2'
+        }
+      },
+      { 
+        name: 'thirdYear', 
+        label: '3. sınıf', 
+        filter: (app: ScholarshipApplication) => {
+          return app.academicYear === '3'
+        }
+      },
+      { 
+        name: 'fourthYear', 
+        label: '4. sınıf', 
+        filter: (app: ScholarshipApplication) => {
+          return app.academicYear === '4'
+        }
+      },
+      {
+        name: 'gpaAbove2', 
+        label: 'Not ortalaması 2.00\'in üstünde olanlar', 
+        filter: (app: ScholarshipApplication) => {
+          const document = parseDocument(app.document)
+          const gpa = document.notort ? parseFloat(document.notort["Genel Not Ortalaması"]) : 0
+          return gpa > 2.0
+        }
+      },
+      {
+        name: 'gpaAbove3', 
+        label: 'Not ortalaması 3.00\'in üstünde olanlar', 
+        filter: (app: ScholarshipApplication) => {
+          const document = parseDocument(app.document)
+          const gpa = document.notort ? parseFloat(document.notort["Genel Not Ortalaması"]) : 0
+          return gpa > 3.0
+        }
+      },
+    ]
+  },
+  {
+    name: 'Aile Durumu',
+    filters: [
+      { 
+        name: 'parentsLivingTogether', 
+        label: 'Anne babası birlikte olanlar', 
+        filter: (app: ScholarshipApplication) => {
+          const document = parseDocument(app.document)
+          return document.nufuz?.kisi?.bosanma === 'Birlikte'
+        }
+      },
+      { 
+        name: 'parentsSeparated', 
+        label: 'Anne babası ayrı olanlar', 
+        filter: (app: ScholarshipApplication) => {
+          const document = parseDocument(app.document)
+          return document.nufuz?.kisi?.bosanma === 'Ayrı'
+        }
+      },
+      { 
+        name: 'motherDeceased', 
+        label: 'Annesi sağ olmayanlar', 
+        filter: (app: ScholarshipApplication) => {
+          const document = parseDocument(app.document)
+          return document.nufuz?.anne?.durum === 'Vefat'
+        }
+      },
+      { 
+        name: 'fatherDeceased', 
+        label: 'Babası sağ olmayanlar', 
+        filter: (app: ScholarshipApplication) => {
+          const document = parseDocument(app.document)
+          return document.nufuz?.baba?.durum === 'Vefat'
+        }
+      },
+    ]
+  },
+  {
+    name: 'Kardeş Durumu',
+    filters: [
+      { 
+        name: 'siblingCountAbove1', 
+        label: '1\'in üzerinde kardeşe sahip olanlar', 
+        filter: (app: ScholarshipApplication) => {
+          return app.siblings.length > 1
+        }
+      },
+      { 
+        name: 'siblingCountAbove2', 
+        label: '2\'nin üzerinde kardeşe sahip olanlar', 
+        filter: (app: ScholarshipApplication) => {
+          return app.siblings.length > 2
+        }
+      },
+      { 
+        name: 'studyingSiblingCountAbove1', 
+        label: '1\'in üzerinde eğitim gören kardeşe sahip olanlar', 
+        filter: (app: ScholarshipApplication) => {
+          return app.siblings.filter(sibling => 
+            sibling.educationStatus && 
+            sibling.educationStatus.toLowerCase() !== 'mezun' && 
+            sibling.educationStatus.toLowerCase() !== 'çalışmıyor'
+          ).length > 1
+        }
+      },
+      { 
+        name: 'onlyChildStudying', 
+        label: 'Okuyan tek çocuk', 
+        filter: (app: ScholarshipApplication) => {
+          return app.siblings.filter(sibling => 
+            sibling.educationStatus && 
+            sibling.educationStatus.toLowerCase() !== 'mezun' && 
+            sibling.educationStatus.toLowerCase() !== 'çalışmıyor'
+          ).length === 0
+        }
+      },
+    ]
+  },
+  {
+    name: 'Burs ve Kredi Durumu',
+    filters: [
+      { 
+        name: 'receivingScholarship', 
+        label: 'Burs alanlar', 
+        filter: (app: ScholarshipApplication) => {
+          const document = parseDocument(app.document)
+          return document.burs?.finansal_durum === 'Burs Alıyor'
+        }
+      },
+      { 
+        name: 'receivingStudentLoan', 
+        label: 'Öğrenci kredisi alanlar', 
+        filter: (app: ScholarshipApplication) => {
+          const document = parseDocument(app.document)
+          return document.burs?.finansal_durum === 'Kredi Alıyor'
+        }
+      },
+      { 
+        name: 'noScholarshipOrLoan', 
+        label: 'Burs veya öğrenci kredisi almayanlar', 
+        filter: (app: ScholarshipApplication) => {
+          const document = parseDocument(app.document)
+          return !document.burs?.finansal_durum || 
+                 document.burs?.finansal_durum === 'Hiçbiri'
+        }
+      },
+    ]
+  }
+]
 
 export default function AdminPanel() {
   const [applications, setApplications] = useState<ScholarshipApplication[]>([])
-
-  const [selectedApplicant, setSelectedApplicant] = useState<string | null>(null);
-   
+  const [selectedApplicant, setSelectedApplicant] = useState<string | null>(null)
+  const [selectedFilters, setSelectedFilters] = useState<string[]>([])
 
   useEffect(() => {
     async function fetchApplications() {
@@ -53,50 +295,101 @@ export default function AdminPanel() {
     fetchApplications()
   }, [])
 
-
-
-  const parseDocument = (documentString: string) => {
-    try {
-      return JSON.parse(documentString)
-    } catch (error) {
-      console.error('Error parsing document:', error)
-      return {}
-    }
-  }
-
   const onViewApplicant = (fullName: string) => {
     setSelectedApplicant(fullName);
-    // Scroll to the applicant's card
     const applicantCard = document.getElementById(`applicant-${fullName}`);
     if (applicantCard) {
       applicantCard.scrollIntoView({ behavior: 'smooth' });
     }
-  };
+  }
+
+  const handleFilterChange = (filterName: string) => {
+    setSelectedFilters(prevFilters => 
+      prevFilters.includes(filterName)
+        ? prevFilters.filter(f => f !== filterName)
+        : [...prevFilters, filterName]
+    )
+  }
+
+  const filteredApplications = applications.filter(application => {
+    // If no filters are selected, show all applications
+    if (selectedFilters.length === 0) return true
+
+    // Check if the application meets all selected filter conditions
+    return selectedFilters.every(filterName => {
+      const filterCondition = filterGroups
+        .flatMap(group => group.filters)
+        .find(cb => cb.name === filterName)
+      return filterCondition ? filterCondition.filter(application) : true
+    })
+  })
+
+  const clearAllFilters = () => {
+    setSelectedFilters([])
+  }
 
   return (
     <SidebarProvider>
       <div className="flex h-screen overflow-hidden">
         <AdminSidebar 
-           
-          
           onEyeClick={onViewApplicant}
         />
+        
         <SidebarInset className="flex-grow overflow-hidden">
           <ScrollArea className="h-full">
             <div className="p-4">
-              <h2 className="text-2xl font-semibold mb-4">Burs Başvuruları</h2>
+              <h2 className="text-2xl font-semibold mb-4">
+                Burs Başvuruları 
+                <span className="ml-2 text-sm text-gray-500">
+                  ({filteredApplications.length} / {applications.length})
+                </span>
+              </h2>
 
+              {/* Filtering Section */}
+              <Accordion type="multiple" className="mb-4">
+                {filterGroups.map((group, groupIndex) => (
+                  <AccordionItem value={`group-${groupIndex}`} key={group.name}>
+                    <AccordionTrigger>{group.name}</AccordionTrigger>
+                    <AccordionContent>
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                        {group.filters.map((checkbox) => (
+                          <div key={checkbox.name} className="flex items-center space-x-2">
+                            <Checkbox 
+                              id={checkbox.name}
+                              checked={selectedFilters.includes(checkbox.name)}
+                              onCheckedChange={() => handleFilterChange(checkbox.name)}
+                            />
+                            <Label htmlFor={checkbox.name} className="cursor-pointer">
+                              {checkbox.label}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+
+              {selectedFilters.length > 0 && (
+                <div className="mb-4">
+                  <button 
+                    onClick={clearAllFilters}
+                    className="text-red-500 hover:text-red-700 underline"
+                  >
+                    Tüm Filtreleri Temizle
+                  </button>
+                </div>
+              )}
               
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-1 sm:gap-2 md:gap-3 lg:gap-4 xl:gap-5">
-                  {applications.map((application) => {
-                    const document = parseDocument(application.document)
-                    return (
-                      
-                      <Card 
-                        key={application.id} 
-                        className={`flex flex-col ${selectedApplicant === application.fullName ? 'border-2 border-green-500' : ''}`}
-                        id={`applicant-${application.fullName}`}
-                      >
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-1 sm:gap-2 md:gap-3 lg:gap-4 xl:gap-5">
+                {filteredApplications.map((application) => {
+                  const document = parseDocument(application.document)
+                  return (
+                    <Card 
+                      key={application.id} 
+                      className={`flex flex-col ${selectedApplicant === application.fullName ? 'border-2 border-green-500' : ''}`}
+                      id={`applicant-${application.fullName}`}
+                    >
                         <CardHeader>
                           <CardTitle>{application.fullName}</CardTitle>
                         </CardHeader>
@@ -259,7 +552,6 @@ export default function AdminPanel() {
                     )
                   })}
                 </div>
-　　 　　　　　
             </div>
           </ScrollArea>
         </SidebarInset>
