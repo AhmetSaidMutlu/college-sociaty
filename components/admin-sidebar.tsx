@@ -328,7 +328,7 @@ export function AdminSidebar({ onEyeClick, onFilterChange }: { onEyeClick: (full
                 {isLoading ? "İşleniyor..." : "Yapay zeka Otomatik Sıralama"}
               </Button>
               <FormDescription>
-                Başvurular sıralandığında yanlarında bulunan Göz ikonuna basıp kontrol etmenizi tavsiye ederiz.
+                Özellikle fazla başvuru olduğunda kartların yanlarında bulunan Göz ikonuna basıp kontrol etmenizi tavsiye ederiz.
               </FormDescription>
             </form>
           </Form>
