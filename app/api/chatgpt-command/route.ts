@@ -20,30 +20,26 @@ export async function POST() {
       Her başvuru şu alanlara sahiptir: ${Object.keys(applications[0]).join(', ')}.
 
       Önemli Not: Eğer bir başvuruda kardeş bilgisi girilmemişse, o öğrenciyi tek çocuk olarak değerlendirin.
+      Ayrıca, anne veya baba durumu 'Belirtilmemiş' ise, bu bilgiyi değerlendirmeye almayın.
 
-      Lütfen aşağıdaki kriterleri göz önünde bulundurarak başvuruları en çok ihtiyaç sahibinden en az ihtiyaç sahibine doğru sıralayın:
-      1. Şehit/Gazi Yakını durumu
-      2. Aylık Net Gelir (memur ise Memur Ödenen Maaş)
-      3. Genel Not Ortalaması
-      4. Eğitim gören kardeş sayısı
+      Lütfen aşağıdaki kriterleri önem sırasına göre göz önünde bulundurarak başvuruları en çok ihtiyaç sahibinden en az ihtiyaç sahibine doğru sıralayın:
+
+      1. Kişi Başına Düşen Gelir (calculatePerCapitaIncome): Bu, en önemli ve öncelikli kriterdir. Bu değer ne kadar düşükse, başvuru sahibi o kadar öncelikli olmalıdır. Eğer bu değer 'Belirtilmemiş' ise, diğer kriterlere bakılmalıdır.
+      2. Anne veya Babanın Vefat Etmiş Olması: Eğer anne veya babadan biri vefat etmişse, bu durum ikinci öncelikli kriter olarak değerlendirilmelidir.
+      3. Engelli veya Şehit/Gazi Yakını Olma Durumu: Bu durumlardan herhangi biri varsa, üçüncü öncelikli kriter olarak değerlendirilmelidir.
+      4. Genel Not Ortalaması: En son kriter olarak değerlendirilmelidir. Daha yüksek not ortalaması, diğer kriterler eşitse öncelik sağlar.
 
       Başvurular:
       ${applications.map(app => `
         Başvuru Sahibi: ${app.fullName}
-        Kurum: ${app.institution}
-        Akademik Yıl: ${app.academicYear}
-        Motivasyon: ${app.motivation}
-        İkamet Durumu: ${app.residenceStatus}
-        Aylık Ücret: ${app.monthlyFee || 'Belirtilmemiş'}
-        Şehit/Gazi Yakını mı: ${app.isMartyVeteranRelative ? 'Evet' : 'Hayır'}
+        Kişi Başına Düşen Gelir: ${app.calculatePerCapitaIncome}
+        Anne Durumu: ${app.anneStatus}
+        Baba Durumu: ${app.babaStatus}
         Engelli mi: ${app.hasDisability ? 'Evet' : 'Hayır'}
-        Aile İstihdam Durumu: ${app.familyEmploymentStatus}
-        İstihdam Türü: ${app.employmentType || 'Belirtilmemiş'}
+        Şehit/Gazi Yakını mı: ${app.isMartyVeteranRelative ? 'Evet' : 'Hayır'}
+        Genel Not Ortalaması: ${app.genelNotOrtalamasi || 'Belirtilmemiş'}
         Aylık Net Gelir: ${app.monthlyNetIncome || 'Belirtilmemiş'}
         Memur Ödenen Maaş: ${app.memurOdenenMaas || 'Belirtilmemiş'}
-        Genel Not Ortalaması: ${app.genelNotOrtalamasi || 'Belirtilmemiş'}
-        Finansal Durum: ${app.finansalDurum || 'Belirtilmemiş'}
-        Sınıf: ${app.sinif || 'Belirtilmemiş'}
         Kardeş Sayısı: ${app.siblings.length}
         Eğitim Gören Kardeş Sayısı: ${app.siblings.filter(sibling => sibling.educationStatus !== 'Çalışıyor' && sibling.educationStatus !== '0-6 yaş arası').length}
       `).join('\n\n')}
@@ -51,11 +47,12 @@ export async function POST() {
       Basit bir nesne dizisi döndürün, her biri şunları içermelidir:
       1. "fullName": Başvuru sahibinin tam adı
       2. "rank": Başvuru sahibinin sırası (1 en çok ihtiyaç sahibi)
+      3. "calculatePerCapitaIncome": Kişi başına düşen gelir değeri
 
       Örnek format:
       [
-        { "fullName": "John Doe", "rank": 1 },
-        { "fullName": "Jane Smith", "rank": 2 }
+        { "fullName": "John Doe", "rank": 1, "calculatePerCapitaIncome": "1000.00" },
+        { "fullName": "Jane Smith", "rank": 2, "calculatePerCapitaIncome": "1500.00" }
       ]
       Tüm başvuruları sırala. Yanıtınızın geçerli JSON olduğundan emin olun ve YALNIZCA JSON dizisini yanıtınıza dahil edin.
     `
@@ -84,8 +81,15 @@ export async function POST() {
         throw new Error('Response is not an array')
       }
 
-      console.log('Ranked list:', rankedList)
-      return NextResponse.json(rankedList)
+      // Validate and ensure each item has the required properties
+      const validatedList = rankedList.map(item => ({
+        fullName: item.fullName,
+        rank: item.rank,
+        calculatePerCapitaIncome: item.calculatePerCapitaIncome
+      }))
+
+      console.log('Ranked list:', validatedList)
+      return NextResponse.json(validatedList)
     } catch (error) {
       console.error('Error parsing OpenAI response:', error)
       console.error('Raw response:', message)
@@ -129,6 +133,23 @@ async function fetchApplications() {
     
     const formattedApplications = applications.map(app => {
       const document = app.document as unknown as { [key: string]: { [key: string]: string } }; 
+      const monthlyNetIncome = app.monthlyNetIncome ? parseFloat(app.monthlyNetIncome) : null
+      const memurOdenenMaas = document?.total?.["Toplam Ödenen"] ? parseFloat(document.total["Toplam Ödenen"]) : null
+      
+      let income: number | null = null
+      if (monthlyNetIncome !== null) {
+        income = monthlyNetIncome
+      } else if (memurOdenenMaas !== null) {
+        income = memurOdenenMaas
+      }
+
+      const familySize = app.siblings.length + 1 // +1 for the applicant
+      let perCapitaIncome: string = 'Belirtilmemiş'
+      
+      if (income !== null && familySize > 0) {
+        perCapitaIncome = (income / familySize).toFixed(2)
+      }
+
       return {
         ...app,
         memurOdenenMaas: document?.total?.["Toplam Ödenen"] || 'Belirtilmemiş',
@@ -136,7 +157,10 @@ async function fetchApplications() {
         finansalDurum: document?.burs?.finansal_durum || 'Belirtilmemiş',
         sinif: document?.ogrbelge?.sınıf || document?.ogrbelge?.Sınıf || 'Belirtilmemiş',
         siblingCount: app.siblings.length,
-        siblingsInEducation: app.siblings.filter(sibling => sibling.educationStatus !== 'Çalışıyor' && sibling.educationStatus !== '0-6 yaş arası').length
+        siblingsInEducation: app.siblings.filter(sibling => sibling.educationStatus !== 'Çalışıyor' && sibling.educationStatus !== '0-6 yaş arası').length,
+        anneStatus: document?.nufuz?.anne?.durum || 'Belirtilmemiş',
+        babaStatus: document?.nufuz?.baba?.durum || 'Belirtilmemiş',
+        calculatePerCapitaIncome: perCapitaIncome
       };
     });
 
