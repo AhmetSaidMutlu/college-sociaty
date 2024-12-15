@@ -1,9 +1,9 @@
-import { useState } from 'react'
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { useFieldArray, useForm } from "react-hook-form"
+import { useFieldArray } from "react-hook-form"
 
 export type SiblingData = {
   name: string
@@ -15,7 +15,7 @@ type SiblingInfoProps = {
   register: any
 }
 
-export function SiblingInfo({ control, register }: SiblingInfoProps) {
+export function SiblingInfo({ control}: SiblingInfoProps) {
   const { fields, append, remove } = useFieldArray({
     control,
     name: "siblings"

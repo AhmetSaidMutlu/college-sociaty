@@ -91,7 +91,7 @@ const filterGroups = [
       { 
         name: 'noIncomeLimit', 
         label: 'Gelir sınırlaması yok', 
-        filter: (app: ScholarshipApplication) => true
+        filter: () => true
       },
     ]
   },
