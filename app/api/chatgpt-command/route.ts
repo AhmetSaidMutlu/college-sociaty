@@ -32,11 +32,7 @@ export async function POST() {
         Kişi Başına Düşen Gelir: ${app.calculatePerCapitaIncome}
         Anne Durumu: ${app.anneStatus}
         Baba Durumu: ${app.babaStatus}
-        Engelli mi: ${app.hasDisability ? 'Evet' : 'Hayır'}
-        Şehit/Gazi Yakını mı: ${app.isMartyVeteranRelative ? 'Evet' : 'Hayır'}
         Genel Not Ortalaması: ${app.genelNotOrtalamasi}
-        Aylık Net Gelir: ${app.monthlyNetIncome}
-        Kardeş Sayısı: ${app.siblingCount}
       `).join('\n\n')}
 
       Basit bir nesne dizisi döndürün, her biri şunları içermelidir:
