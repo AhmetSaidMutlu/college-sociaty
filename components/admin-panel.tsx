@@ -428,6 +428,10 @@ export default function AdminPanel() {
                                   <TableCell>{application.monthlyFee || 'N/A'}</TableCell>
                                 </TableRow>
                                 <TableRow>
+                                  <TableCell className="font-medium">Aylık Net Gerlir</TableCell>
+                                  <TableCell>{application.monthlyNetIncome || 'N/A'}</TableCell>
+                                </TableRow>
+                                <TableRow>
                                   <TableCell className="font-medium">IBAN</TableCell>
                                   <TableCell>{application.iban}</TableCell>
                                 </TableRow>
