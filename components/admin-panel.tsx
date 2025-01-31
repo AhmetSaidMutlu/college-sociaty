@@ -176,18 +176,18 @@ const filterGroups = [
     filters: [
       {
         name: 'parentsLivingTogether',
-        label: 'Anne babası birlikte olanlar',
+        label: 'Annesi ve babası birlikte olanlar',
         filter: (app: ScholarshipApplication) => {
           const document = parseDocument(app.document)
-          return document.nufuz?.kisi?.bosanma === 'Birlikte'
+          return document.nufuz?.kisi?.bosanma === 'birlikte'
         }
       },
       {
         name: 'parentsSeparated',
-        label: 'Anne babası ayrı olanlar',
+        label: 'Annesi ve babası ayrı olanlar',
         filter: (app: ScholarshipApplication) => {
           const document = parseDocument(app.document)
-          return document.nufuz?.kisi?.bosanma === 'Ayrı'
+          return document.nufuz?.kisi?.bosanma === 'ayrı'
         }
       },
       {
@@ -195,7 +195,7 @@ const filterGroups = [
         label: 'Annesi sağ olmayanlar',
         filter: (app: ScholarshipApplication) => {
           const document = parseDocument(app.document)
-          return document.nufuz?.anne?.durum === 'Vefat'
+          return document.nufuz?.anne?.durum === 'vefat'
         }
       },
       {
@@ -203,7 +203,7 @@ const filterGroups = [
         label: 'Babası sağ olmayanlar',
         filter: (app: ScholarshipApplication) => {
           const document = parseDocument(app.document)
-          return document.nufuz?.baba?.durum === 'Vefat'
+          return document.nufuz?.baba?.durum === 'vefat'
         }
       },
       {
@@ -211,7 +211,7 @@ const filterGroups = [
         label: 'İkisi de sağ olmayanlar',
         filter: (app: ScholarshipApplication) => {
           const document = parseDocument(app.document)
-          return document.nufuz?.anne?.durum === 'Vefat' && document.nufuz?.baba?.durum === 'Vefat'
+          return document.nufuz?.anne?.durum === 'vefat' && document.nufuz?.baba?.durum === 'vefat'
         }
       },
     ]

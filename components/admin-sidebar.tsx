@@ -102,8 +102,8 @@ const filterGroups = [
   {
     name: 'Aile Durumu',
     filters: [
-      { name: 'parentsLivingTogether', label: 'Anne babası birlikte olanlar' },
-      { name: 'parentsSeparated', label: 'Anne babası ayrı olanlar' },
+      { name: 'parentsLivingTogether', label: 'Annesi ve babası birlikte olanlar' },
+      { name: 'parentsSeparated', label: 'Annesi ve babası ayrı olanlar' },
       { name: 'motherDeceased', label: 'Annesi sağ olmayanlar' },
       { name: 'fatherDeceased', label: 'Babası sağ olmayanlar' },
       { name: 'bothParentsDeceased', label: 'İkisi de sağ olmayanlar' },
