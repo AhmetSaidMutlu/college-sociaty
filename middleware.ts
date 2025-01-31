@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 import { clerkClient } from '@clerk/nextjs/server'
+import { NextResponse } from 'next/server'
 
 
 
@@ -13,8 +14,8 @@ export default clerkMiddleware(async (auth, req) => {
 
   const { pathname } = req.nextUrl
   const method = req.method
-  console.log('Pathname:', pathname);
-  console.log('Method:', method);
+  // console.log('Pathname:', pathname);
+  // console.log('Method:', method);
 
   if ((pathname === '/api/scholarship-status' && method === 'GET') ||
     (pathname === '/api/uploadogrbelge' && method === 'POST') ||
@@ -35,11 +36,19 @@ export default clerkMiddleware(async (auth, req) => {
     console.log('API or Admin Route');
 
     if (userId) {
-      console.log('User ID:', userId);
       const user = await client.users.getUser(userId)
       const publicMetadata = user.publicMetadata
+      const role = publicMetadata.role
 
-      console.log('User Public Metadata:', publicMetadata)
+      if (role === 'admin') {
+        console.log('Admin User');
+        return
+      }
+      else
+        return NextResponse.redirect(new URL("/login", req.url));
+
+
+      // console.log('User Public Metadata:', publicMetadata)
       return
     }
     else {
