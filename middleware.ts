@@ -45,11 +45,7 @@ export default clerkMiddleware(async (auth, req) => {
         return
       }
       else
-        return NextResponse.redirect(new URL("/login", req.url));
-
-
-      // console.log('User Public Metadata:', publicMetadata)
-      return
+        return NextResponse.redirect(new URL("/", req.url));
     }
     else {
       console.log('Redirecting to Sign In');
