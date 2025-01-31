@@ -367,7 +367,7 @@ const filterGroups = [
         label: 'Burs alanlar',
         filter: (app: ScholarshipApplication) => {
           const document = parseDocument(app.document)
-          return document.burs?.finansal_durum === 'Burs Alıyor'
+          return document.burs?.finansal_durum === 'burs alıyor'
         }
       },
       {
@@ -375,7 +375,7 @@ const filterGroups = [
         label: 'Öğrenci kredisi alanlar',
         filter: (app: ScholarshipApplication) => {
           const document = parseDocument(app.document)
-          return document.burs?.finansal_durum === 'Kredi Alıyor'
+          return document.burs?.finansal_durum === 'öğrenim kredisi alıyor'
         }
       },
       {
@@ -384,7 +384,7 @@ const filterGroups = [
         filter: (app: ScholarshipApplication) => {
           const document = parseDocument(app.document)
           return !document.burs?.finansal_durum ||
-            document.burs?.finansal_durum === 'Hiçbiri'
+            document.burs?.finansal_durum === 'kredi veya burs almıyor'
         }
       },
     ]
