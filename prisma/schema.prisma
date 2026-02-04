@@ -4,38 +4,45 @@ datasource db {
 }
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-1.1.x"]
 }
 
 model ScholarshipApplication {
-  id                     String   @id @default(uuid())
-  fullName               String
-  email                  String
-  institution            String
-  tcKimlikNo             String   @unique
-  academicYear           String
-  motivation             String
-  document               String
-  residenceStatus        String
-  monthlyFee             String?
-  iban                   String
-  bankAccountName        String
-  isMartyVeteranRelative Boolean
-  hasDisability          Boolean
-  familyEmploymentStatus String
-  employmentType         String?
-  monthlyNetIncome       String?
-  siblings               Sibling[]
+  id                       String   @id @default(uuid())
+  fullName                 String
+  email                    String
+  phoneNumber              String
+  institution              String
+  tcKimlikNo               String   @unique
+  academicYear             String
+  agno                     String
+  familyStatus             String
+  otherScholarships        String
+  previouslyReceived       Boolean
+  motivation               String
+  document                 String
+  residenceStatus          String
+  monthlyFee               String?
+  iban                     String
+  bankAccountName          String
+  isMartyVeteranRelative   Boolean
+  hasDisability            Boolean
+  familyEmploymentStatus   String
+  employmentType           String?
+  monthlyNetIncome         String?
+  totalScholarshipValue    String?
+  siblings                 Sibling[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model Sibling {
-  id                      String                 @id @default(uuid())
-  name                    String
-  educationStatus         String
-  scholarshipApplication  ScholarshipApplication @relation(fields: [scholarshipApplicationId], references: [id])
+  id                       String                 @id @default(uuid())
+  name                     String
+  educationStatus          String
+  scholarshipApplication   ScholarshipApplication @relation(fields: [scholarshipApplicationId], references: [id])
   scholarshipApplicationId String
 }
 
@@ -43,4 +50,3 @@ model Setting {
   key   String @id
   value String
 }
-
